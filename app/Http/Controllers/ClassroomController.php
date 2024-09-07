@@ -3,7 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Classroom;
+use App\Models\Group;
+use App\Models\Student;
+use App\Models\Workshop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class ClassroomController extends Controller
 {
@@ -18,17 +24,45 @@ class ClassroomController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Workshop $workshop) : View
     {
-        //
+        $groups = Group::whereBelongsTo($workshop)->get();
+        dump($groups);
+        return view('classrooms.create', ['workshop' => $workshop, 'groups' => $groups]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Workshop $workshop)
     {
-        //
+        return DB::transaction(function () use ($request, $workshop) {
+            $classroom = Classroom::create([
+                'name' => $request->input('name'),
+                'grade' => $request->input('grade'),
+                'workshop_id' => $workshop->id,
+            ]);
+
+            $studentNames = $request->input('studentNames');
+
+            $newStudents = new Collection();
+
+            for ($i = 0; $i < count($studentNames); $i++) {
+                if(!empty($studentNames[$i])){
+                    $newStudents->push(
+                        Student::create([
+                            'classrroom_id' => $classroom->id,
+                            'name' => $studentNames[$i],
+                        ])
+                    );
+
+                }
+            }
+            $classroom->students()->saveMany($newStudents);
+            //TODO save preferences too
+
+            return redirect(route('workshops.classrooms.show', ['workshop' => $workshop, 'classroom' => $classroom]));
+        });
     }
 
     /**
@@ -36,7 +70,7 @@ class ClassroomController extends Controller
      */
     public function show(Classroom $classroom)
     {
-        //
+        return view('classrooms.show', ['classroom' => $classroom]);
     }
 
     /**
@@ -52,7 +86,7 @@ class ClassroomController extends Controller
      */
     public function update(Request $request, Classroom $classroom)
     {
-        //
+        abort(400, 'Not implemented yet');
     }
 
     /**

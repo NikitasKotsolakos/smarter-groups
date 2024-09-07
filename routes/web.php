@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkshopController;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,10 @@ Route::middleware('auth')->group(function () {
 
 Route::group(['middleware' => ['auth', 'verified', ]], function () {
     Route::resource('workshops', WorkshopController::class)
-        ->only(['create', 'store', 'show']);
+        ->only(['create', 'store', 'show', 'update']);
+    Route::resource('workshops.classrooms', ClassroomController::class)
+        ->only(['create', 'store', 'show', 'update']);
+
 });
 
 

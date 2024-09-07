@@ -32,7 +32,7 @@ class WorkshopController extends Controller
      */
     public function store(Request $request)
     {
-        DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             $workshop = Workshop::create([
                 'name' => $request->input('name'),
             ]);
@@ -71,7 +71,7 @@ class WorkshopController extends Controller
      */
     public function show(Workshop $workshop)
     {
-        return view('workshops.show');
+        return view('workshops.show', ['workshop' => $workshop]);
     }
 
     /**
@@ -87,7 +87,7 @@ class WorkshopController extends Controller
      */
     public function update(Request $request, Workshop $workshop)
     {
-        //
+        abort(400, 'Not implemented yet');
     }
 
     /**

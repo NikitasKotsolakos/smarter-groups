@@ -14,9 +14,4 @@ class Workshop extends Model
         return $this->hasMany(Group::class);
     }
 
-    public function students(): HasMany
-    {
-        return $this->HasMany(Student::class);
-    }
-
 }
