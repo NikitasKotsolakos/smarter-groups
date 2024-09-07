@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Classroom;
 use App\Models\Group;
+use App\Models\GroupPreferences;
 use App\Models\Student;
 use App\Models\Workshop;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class ClassroomController extends Controller
     public function store(Request $request, Workshop $workshop)
     {
         return DB::transaction(function () use ($request, $workshop) {
-            $classroom = Classroom::create([
+            $newclassroom = Classroom::create([
                 'name' => $request->input('name'),
                 'grade' => $request->input('grade'),
                 'workshop_id' => $workshop->id,
@@ -49,28 +50,64 @@ class ClassroomController extends Controller
 
             for ($i = 0; $i < count($studentNames); $i++) {
                 if(!empty($studentNames[$i])){
-                    $newStudents->push(
-                        Student::create([
-                            'classrroom_id' => $classroom->id,
+                    $newclassroom->students()->create([
                             'name' => $studentNames[$i],
-                        ])
-                    );
-
+                        ]);
                 }
             }
-            $classroom->students()->saveMany($newStudents);
-            //TODO save preferences too
 
-            return redirect(route('workshops.classrooms.show', ['workshop' => $workshop, 'classroom' => $classroom]));
+            $createdClassroom = Classroom::whereId($newclassroom->id)->first();
+
+            for ($i = 0; $i < count($studentNames); $i++) {
+                if(!empty($studentNames[$i])) {
+                    $student = Student::whereBelongsTo($newclassroom)->whereName($studentNames[$i])->first();
+                    $preferences = new Collection();
+                    if (!empty($request->input('preferences1')[$i])) {
+                        GroupPreferences::create([
+                            'student_id' => $student->id,
+                            'group_id' => $request->input('preferences1')[$i],
+                        ]);
+                    }
+                    if (!empty($request->input('preferences2')[$i])) {
+                        GroupPreferences::create([
+                            'student_id' => $student->id,
+                            'group_id' => $request->input('preferences2')[$i],
+                        ]);
+                    }
+                    if (!empty($request->input('preferences3')[$i])) {
+                        GroupPreferences::create([
+                            'student_id' => $student->id,
+                            'group_id' => $request->input('preferences3')[$i],
+                        ]);
+                    }
+                    if (!empty($request->input('preferences4')[$i])) {
+                        GroupPreferences::create([
+                            'student_id' => $student->id,
+                            'group_id' => $request->input('preferences4')[$i],
+                        ]);
+                    }
+                    if (!empty($request->input('preferences5')[$i])) {
+                        GroupPreferences::create([
+                            'student_id' => $student->id,
+                            'group_id' => $request->input('preferences5')[$i],
+                        ]);
+                    }
+
+                    $student->groupPreferences()->saveMany($preferences);
+                }
+            }
+
+            $createdClassroom->students->load('groupPreferences'); //TODO not working
+            return redirect(route('workshops.classrooms.show', ['workshop' => $workshop, 'classroom' => $createdClassroom]));
         });
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Classroom $classroom)
+    public function show(Workshop $workshop, Classroom $classroom)
     {
-        return view('classrooms.show', ['classroom' => $classroom]);
+        return view('classrooms.show', ['workshop' => $workshop, 'classroom' => $classroom]);
     }
 
     /**
