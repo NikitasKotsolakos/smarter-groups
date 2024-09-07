@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Workshop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class WorkshopController extends Controller
 {
@@ -18,9 +22,9 @@ class WorkshopController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): View
     {
-        //
+        return view('workshops.create');
     }
 
     /**
@@ -28,15 +32,46 @@ class WorkshopController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        DB::transaction(function () use ($request) {
+            $workshop = Workshop::create([
+                'name' => $request->input('name'),
+            ]);
+
+            $groupNames = $request->input('groupNames');
+            $minimumParticipants = $request->input('minimumParticipants');
+            $maximumParticipants = $request->input('maximumParticipants');
+            $priorityGroups = $request->input('priorityGroups');
+
+            $newGroups = new Collection();
+
+            for ($i = 0; $i < count($groupNames); $i++) {
+                if(!empty($groupNames[$i])){
+                    $newGroups->push(
+                        Group::create([
+                            'workshop_id' => $workshop->id,
+                            'name' => $groupNames[$i],
+                            'minimumParticipants' => $minimumParticipants[$i],
+                            'maximumParticipants' => $maximumParticipants[$i],
+                            'priorityGroup' => $priorityGroups[$i],
+
+                        ])
+                    );
+                }
+            }
+            $workshop->groups()->saveMany($newGroups);
+            return redirect(route('workshops.show', $workshop->id));
+
+        });
+
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show(Workshop $workshop)
     {
-        //
+        return view('workshops.show');
     }
 
     /**

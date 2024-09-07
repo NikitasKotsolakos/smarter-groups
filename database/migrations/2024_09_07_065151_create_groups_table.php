@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('name');
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->integer('minimumParticipants');
+            $table->integer('maximumParticipants');
+            $table->integer('priorityGroup');
+            $table->foreignId('workshop_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->nullable()->constrained()->cascadeOnDelete();
         });
     }
 

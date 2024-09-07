@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Classroom
+ *
+ * @mixin Eloquent
+ */
 class Classroom extends Model
 {
     protected $fillable = ["name", "grade"];
