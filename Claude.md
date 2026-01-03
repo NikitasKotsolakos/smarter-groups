@@ -1,5 +1,7 @@
 # Group Splitter - Laravel Application
 
+> **Related Documentation**: See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for current status, algorithm requirements, and development roadmap.
+
 ## Project Overview
 
 **Group Splitter** is a web application designed to help teachers/organizers assign participants (typically students) to groups within workshops based on their preferences and constraints.
@@ -105,69 +107,15 @@ Workshop (Event/Session)
 
 ## Current Implementation Status
 
-### Completed ✓
-- Basic Laravel 11 setup with PHP 8.4
-- All models created:
-  - Workshop, Group, Student, Classroom, GroupPreferences, User
-- All migrations run successfully
-- Basic CRUD controllers exist:
-  - WorkshopController
-  - GroupController
-  - StudentController
-  - ClassroomController
-  - GroupPreferencesController
-  - ProfileController
-- Laravel Breeze installed for authentication
-  - User registration functional
-  - User login/logout functional
-- Database seeder functional
-  - Creates default admin user (admin@admin.com / admin123)
-  - Run with: `php artisan db:seed`
-- Frontend: Vite + Tailwind CSS + Alpine.js
-- **Workshop Management**:
-  - Users can create workshops with groups and their parameters
-  - Users can view workshops
-  - Groups can be created with min/max participants and priority settings
+> **For detailed implementation status, roadmap, and TODOs**: See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
-### Not Yet Implemented ✗
-- **Assignment algorithm** (main feature - core functionality)
-- Student management interface (add/import students to workshops)
-- Preference collection interface (students ranking their group choices)
-- Manual adjustment interface (teachers tweaking algorithm results)
-- Classroom management and assignment to workshops
-- Classroom mixing preferences in algorithm
-- Export/reporting features
-- Most business logic beyond basic CRUD
-
-## Algorithm Requirements
-
-### Reference Implementation
-- Existing Java implementation at: `/home/nikitas/programming/java/project-group-splitter-java`
-- Currently works with CSV input
-- Algorithm logic will need to be ported to PHP/Laravel
-
-### Algorithm Features Needed
-1. **Preference Matching**: Assign students to their preferred groups when possible
-   - Must handle both ranked and unranked preferences
-   - Ranked: 1st choice, 2nd choice, 3rd choice
-   - Unranked: All preferences treated equally (to avoid popular group overload and student disappointment)
-   - Mixed: Some preferences may share the same rank
-2. **Capacity Constraints**: Respect min/max participants for each group
-3. **Priority Groups**: Fill higher-priority groups first (useful for less popular groups)
-4. **Classroom Mixing** (optional feature): Try to mix students from different classrooms
-5. **Optimization Goal**: Maximize overall satisfaction while respecting constraints
-6. **Output**: A "good enough" initial assignment that teachers can manually refine
-
-### Algorithm Inputs
-- List of students with their group preferences (may be ranked, unranked, or mixed ranking)
-- List of groups with min/max capacity and priority levels
-- Optional: classroom mixing preference flag
-- Optional: whether preferences are ranked or unranked for this workshop
-
-### Algorithm Output
-- Assignment of each student to exactly one group
-- Should respect all hard constraints (min/max capacity)
-- Should optimize for preferences and priorities
+### Quick Status Summary
+- ✓ Basic Laravel setup complete with authentication
+- ✓ Database models and migrations in place
+- ✓ Workshop and group creation functional
+- ✗ Assignment algorithm (core feature) - not yet implemented
+- ✗ Student management and preference collection - not yet implemented
+- ✗ Manual adjustment interface - not yet implemented
 
 ## Technical Stack
 
@@ -215,39 +163,13 @@ Workshop (Event/Session)
 - `database/migrations/2024_09_07_092238_create_workshop_classrooms_table.php`
 - `database/migrations/2024_09_07_092507_create_groups_students_table.php`
 
-## Known Issues / TODOs
+## Design Philosophy & Terminology
 
-### Database Schema Issues
-1. **GroupPreferences missing rank field**: Need to add a `rank` or `preference_order` field
-   - Should be nullable or have default value to support unranked preferences
-   - When null or all same value: preferences are equal (unranked mode)
-   - When different values: preferences are ranked (1st, 2nd, 3rd choice)
-2. **Consider adding fields**:
-   - `allow_ranking` boolean in `workshops` table to control if students can rank preferences for this workshop
-   - `assigned_at` timestamp in `groups_students` to track when assignment was made
-   - `manually_edited` boolean in `groups_students` to track teacher adjustments
-   - `status` field in workshops to track if it's draft/active/completed
-
-### Model Relationship Issues
-1. Workshop model doesn't define relationship to Classrooms
-2. Group model doesn't define relationship to Students
-3. Student model relationships not visible yet
-4. Classroom model relationships not visible yet
-
-## Future Considerations
-
-### Terminology
+### Terminology Choices
 - Current naming (Workshop → Groups → Students) is intentionally generic
 - Could be renamed in the future to be more specific (e.g., Groups → Projects)
 - Keeping it generic allows the system to be used for contexts beyond student/project scenarios
-
-### Features to Consider
-- **Multi-workshop support**: Can a student participate in multiple workshops? (probably yes, but only one group per workshop)
-- **Time slots**: Do workshops happen at specific times that might conflict?
-- **Teacher preferences**: Should certain groups have specific teacher assignments?
-- **Export/Import**: CSV export of assignments, bulk import of students
-- **History**: Track changes to assignments over time
-- **Notifications**: Email students their assignments
+- **Important**: Don't rename Groups to Projects without explicit user request
 
 ## Development Setup
 
@@ -293,21 +215,17 @@ php artisan db:seed
 
 ## Notes for AI Assistant
 
-### When Working on This Project
-1. **Respect the generic terminology**: Don't rename Groups to Projects without explicit user request
-2. **Algorithm is critical**: The assignment algorithm is the core feature - needs careful implementation
-3. **Reference Java code**: When implementing the algorithm, check `/home/nikitas/programming/java/project-group-splitter-java`
-4. **User-friendly adjustments**: The UI for manual adjustments is important - teachers need to easily move students between groups
-5. **Database schema may need updates**: GroupPreferences needs a rank field at minimum
+### Key Reminders
+1. **This is the domain knowledge file** - For implementation details, TODOs, and roadmap, always check [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
+2. **Respect the generic terminology**: Don't rename Groups to Projects without explicit user request
+3. **Algorithm is critical**: The assignment algorithm is the core feature - reference Java implementation at `/home/nikitas/programming/java/project-group-splitter-java`
+4. **Preference flexibility**: System must support both ranked and unranked preference modes
+5. **User-friendly adjustments**: Teachers need to easily move students between groups after algorithm runs
 
 ### Conventions
-- Using Laravel 11 conventions
+- Laravel 11 with PHP 8.4
 - Eloquent ORM for database operations
 - RESTful controller methods
 - Blade templates for views (with Alpine.js for interactivity)
-- Following Laravel best practices
-
-### Testing Approach
 - Pest for testing
-- Focus on testing the algorithm thoroughly
-- Test edge cases: groups at min/max capacity, all students prefer same group, etc.
+- Following Laravel best practices
