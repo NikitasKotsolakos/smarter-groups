@@ -16,7 +16,10 @@
   - User login/logout functional
 - Database seeder functional
   - Creates default admin user (admin@admin.com / admin123)
-  - Seeds 2 sample workshops with groups for testing
+  - Seeds 2 sample workshops with groups, classrooms, students, and preferences for testing
+  - Workshop 1: 45 students across 3 classrooms with 4 groups
+  - Workshop 2: 25 students across 2 classrooms with 3 groups
+  - Students have randomized preferences (1-3 choices each)
   - Run with: `php artisan db:seed` or `php artisan migrate:fresh --seed`
 - Frontend: Vite + Tailwind CSS + Alpine.js
 
