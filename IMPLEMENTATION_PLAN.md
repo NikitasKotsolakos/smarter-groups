@@ -36,12 +36,15 @@
   - ✓ Users can create workshops with groups and their parameters
   - ✓ Users can view individual workshop details
   - ✓ Users can see list of all their workshops
-  - ✓ Users can edit workshop name and group details
+  - ✓ Users can edit workshop name, group details, and classrooms
   - ✓ Workshops are user-scoped (each user sees only their own workshops)
   - ✓ Workshop listing shows name, group count, and creation date
   - ✓ Navigation includes "My Workshops" link
+  - ✓ Tab-based UI for managing Groups and Classrooms
   - ✓ Groups can be created with min/max participants and priority settings
   - ✓ Groups can be edited (name, min/max, priority)
+  - ✓ Classrooms can be created and edited (name)
+  - ✓ Classrooms are per-workshop (not shared across workshops)
 
 ### Not Yet Implemented ✗
 
@@ -235,10 +238,12 @@ A simple, focused application that allows teachers to complete the entire workfl
 - Simple list/table view of all students in a workshop
 
 #### 5. Classroom Management (per-workshop)
-- **New**: User can create classrooms for a workshop
-- **New**: User can assign students to classrooms
-- Classrooms are per-workshop (not shared)
-- Basic list view
+- ✓ User can create classrooms for a workshop (implemented)
+- ✓ User can edit classroom names (implemented)
+- ✓ Classrooms are per-workshop (not shared) (implemented)
+- ✓ Tab-based UI for managing classrooms (implemented)
+- **Pending**: User can delete classrooms
+- **Pending**: User can assign students to classrooms (in student management)
 
 #### 6. Preference Collection
 - **New**: User can set preferences for each student

@@ -35,7 +35,7 @@ Workshop (Event/Session)
 - **Relationships**:
   - Belongs to User (creator/owner)
   - Has many Groups
-  - Has many Classrooms (through `workshop_classrooms` pivot)
+  - Has many Classrooms
 
 #### Group
 - **Purpose**: A specific project/activity within a workshop that students can join
@@ -64,9 +64,11 @@ Workshop (Event/Session)
 - **Purpose**: Organizational unit for students (e.g., class 5A, 5B, etc.)
 - **Attributes**:
   - `name`: Name of the classroom
+  - `workshop_id`: Foreign key to Workshop
 - **Relationships**:
+  - Belongs to a Workshop
   - Has many Students
-  - Belongs to many Workshops (through `workshop_classrooms` pivot)
+- **Scope**: Classrooms are per-workshop (not shared across workshops)
 - **Note**: May play a role in the algorithm if teachers want to "mix" students from different classrooms
 
 #### GroupPreferences
@@ -117,9 +119,11 @@ Workshop (Event/Session)
 - ✓ Basic Laravel setup complete with authentication
 - ✓ Database models and migrations in place
 - ✓ Workshop management: create, list, view, edit (user-scoped)
-- ✓ Group management: create, edit within workshops
+- ✓ Group management: create, edit within workshops (tab-based UI)
+- ✓ Classroom management: create, edit within workshops (tab-based UI)
+- ✗ Student management - not yet implemented
+- ✗ Preference collection - not yet implemented
 - ✗ Assignment algorithm (core feature) - not yet implemented
-- ✗ Student management and preference collection - not yet implemented
 - ✗ Manual adjustment interface - not yet implemented
 
 ## Technical Stack

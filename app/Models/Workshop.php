@@ -15,6 +15,11 @@ class Workshop extends Model
         return $this->hasMany(Group::class);
     }
 
+    public function classrooms(): HasMany
+    {
+        return $this->hasMany(Classroom::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
