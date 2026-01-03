@@ -1,6 +1,6 @@
 # Group Splitter - Laravel Application
 
-> **Related Documentation**: See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for current status, algorithm requirements, and development roadmap.
+> **Related Documentation**: See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for current status, algorithm requirements, and development roadmap.
 
 ## Project Overview
 
@@ -113,7 +113,7 @@ Workshop (Event/Session)
 
 ## Current Implementation Status
 
-> **For detailed implementation status, roadmap, and TODOs**: See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
+> **For detailed implementation status, roadmap, and TODOs**: See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 
 ### Quick Status Summary
 - ✓ Basic Laravel setup complete with authentication
@@ -237,7 +237,7 @@ php artisan db:seed
 ## Notes for AI Assistant
 
 ### Key Reminders
-1. **This is the domain knowledge file** - For implementation details, TODOs, and roadmap, always check [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
+1. **This is the domain knowledge file** - For implementation details, TODOs, and roadmap, always check [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 2. **Respect the generic terminology**: Don't rename Groups to Projects without explicit user request
 3. **Algorithm is critical**: The assignment algorithm is the core feature - reference Java implementation at `/home/nikitas/programming/java/project-group-splitter-java`
 4. **Preference flexibility**: System must support both ranked and unranked preference modes

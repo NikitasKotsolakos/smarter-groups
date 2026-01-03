@@ -2,7 +2,7 @@
 
 > **Status**: MVP Development - In Progress
 > **Last Updated**: 2026-01-03
-> **Related**: See [Claude.md](Claude.md) for domain model and project overview
+> **Related**: See [Claude.md](../Claude.md) for domain model and project overview
 
 ## Current Implementation Status
 
@@ -234,6 +234,7 @@ A simple, focused application that allows teachers to complete the entire workfl
 - ✓ User can edit existing groups (name, min/max participants, priority) (implemented)
 - **Pending**: User can delete groups (with validation - can't delete if has assigned students)
 - ✓ Visual display of group parameters in table (implemented)
+- **Pending**: Groups are not created correctly (but are updated ok). Classrooms on the other end are. To be fixed.
 
 #### 4. Student Management (per-workshop)
 - ✓ User can add students to a workshop (manual entry form) (implemented)
