@@ -31,7 +31,9 @@ Workshop (Event/Session)
 - **Purpose**: The overall event or session
 - **Attributes**:
   - `name`: Name of the workshop
+  - `user_id`: Foreign key to User (who created the workshop)
 - **Relationships**:
+  - Belongs to User (creator/owner)
   - Has many Groups
   - Has many Classrooms (through `workshop_classrooms` pivot)
 
@@ -87,6 +89,8 @@ Workshop (Event/Session)
 
 #### User
 - **Purpose**: Teacher/administrator who manages the system
+- **Relationships**:
+  - Has many Workshops (created/owned workshops)
 - **Note**: Students don't currently log in to the system
 
 ## Database Structure
@@ -112,7 +116,8 @@ Workshop (Event/Session)
 ### Quick Status Summary
 - ✓ Basic Laravel setup complete with authentication
 - ✓ Database models and migrations in place
-- ✓ Workshop and group creation functional
+- ✓ Workshop management: create, list, view (user-scoped)
+- ✓ Group creation within workshops
 - ✗ Assignment algorithm (core feature) - not yet implemented
 - ✗ Student management and preference collection - not yet implemented
 - ✗ Manual adjustment interface - not yet implemented
@@ -201,12 +206,17 @@ php artisan db:seed
 - Email: `admin@admin.com`
 - Password: `admin123`
 
+**Sample Data** (created by seeder):
+- 2 workshops with groups pre-populated for testing
+- "Spring Project Workshop" with 4 groups
+- "Summer Activities 2026" with 3 groups
+
 **Testing Workflow**:
-1. Run `php artisan db:seed` to create the admin user
+1. Run `php artisan migrate:fresh --seed` to reset database with sample data
 2. Login at `/login` with the credentials above
-3. Create a workshop from the dashboard
-4. Add groups to the workshop with their parameters (min/max participants, priority)
-5. View the workshop and its groups
+3. View the workshop list at "My Workshops"
+4. Click on a workshop to view/edit details
+5. Create new workshops as needed
 
 ### Environment
 - `.env` file configured for SQLite
