@@ -90,6 +90,35 @@
                                 </td>
                             </tr>
                         @endforeach
+                        <!-- Add new group rows -->
+                        @foreach (range(0, 9) as $index)
+                            <tr>
+                                <td>
+                                    <input type="text" name="newGroupNames[]" class="form-control @error('newGroupNames.'.$index) border-red-500 @enderror" value="{{ old('newGroupNames.'.$index) }}" placeholder="New group">
+                                    @error('newGroupNames.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <input type="number" name="newMinimumParticipants[]" class="form-control @error('newMinimumParticipants.'.$index) border-red-500 @enderror" value="{{ old('newMinimumParticipants.'.$index, 10) }}" placeholder="10">
+                                    @error('newMinimumParticipants.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <input type="number" name="newMaximumParticipants[]" class="form-control @error('newMaximumParticipants.'.$index) border-red-500 @enderror" value="{{ old('newMaximumParticipants.'.$index, 20) }}" placeholder="20">
+                                    @error('newMaximumParticipants.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <input type="number" name="newPriorityGroups[]" class="form-control @error('newPriorityGroups.'.$index) border-red-500 @enderror" value="{{ old('newPriorityGroups.'.$index, 1) }}" placeholder="1">
+                                    @error('newPriorityGroups.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                            </tr>
+                        @endforeach
                         </tbody>
                     </table>
                 </div>
