@@ -32,15 +32,16 @@
   - ProfileController
 
 #### Features Implemented
-- **Workshop Management** (Partially Complete):
+- **Workshop Management** (Complete for MVP):
   - ✓ Users can create workshops with groups and their parameters
   - ✓ Users can view individual workshop details
   - ✓ Users can see list of all their workshops
+  - ✓ Users can edit workshop name and group details
   - ✓ Workshops are user-scoped (each user sees only their own workshops)
   - ✓ Workshop listing shows name, group count, and creation date
   - ✓ Navigation includes "My Workshops" link
-  - Groups can be created with min/max participants and priority settings
-  - Workshop editing not fully implemented yet
+  - ✓ Groups can be created with min/max participants and priority settings
+  - ✓ Groups can be edited (name, min/max, priority)
 
 ### Not Yet Implemented ✗
 
@@ -150,6 +151,11 @@
 2. Missing seeders for realistic test data
 3. No tests written yet
 4. Controllers may need refactoring after requirements are finalized
+5. **Error handling and validation UI needs improvement**:
+   - Current error display is functional but not polished
+   - Custom validation errors (e.g., min > max) don't appear under specific fields
+   - Error messages should be more user-friendly and positioned better
+   - Consider improving visual feedback for validation errors
 
 ## Implementation Decisions to Make
 
@@ -212,14 +218,14 @@ A simple, focused application that allows teachers to complete the entire workfl
 - ✓ User can see list of all their workshops (implemented)
 - ✓ User can see details of a specific workshop (implemented)
 - ✓ Workshops are scoped to users (user_id foreign key added)
-- **In Progress**: User can edit workshop details (name, etc.)
+- ✓ User can edit workshop details (name and groups) (implemented)
 - **Pending**: Workshop status tracking (draft, active, completed)
 
 #### 3. Group Management (within a workshop)
-- ✓ User can create groups for a workshop (already implemented)
-- **Enhancement**: User can edit existing groups (name, min/max participants, priority)
-- **Enhancement**: User can delete groups (with validation - can't delete if has assigned students)
-- Visual display of group parameters
+- ✓ User can create groups for a workshop (implemented)
+- ✓ User can edit existing groups (name, min/max participants, priority) (implemented)
+- **Pending**: User can delete groups (with validation - can't delete if has assigned students)
+- ✓ Visual display of group parameters in table (implemented)
 
 #### 4. Student Management (per-workshop)
 - **New**: User can add students to a workshop (manual entry form)
