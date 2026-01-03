@@ -39,6 +39,11 @@
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Classrooms ({{ $workshop->classrooms->count() }})
                     </button>
+                    <button type="button" @click="activeTab = 'students'"
+                            :class="activeTab === 'students' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Students ({{ $workshop->students->count() }})
+                    </button>
                 </nav>
             </div>
 
@@ -124,6 +129,152 @@
                                 </td>
                                 <td>
                                     <!-- Placeholder -->
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Students Tab -->
+                <div x-show="activeTab === 'students'" x-cloak>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Classroom</th>
+                            <th>1st Choice</th>
+                            <th>2nd Choice</th>
+                            <th>3rd Choice</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($workshop->students as $index => $student)
+                            <tr>
+                                <td>
+                                    <input type="hidden" name="studentIds[]" value="{{$student->id}}">
+                                    <input type="text" name="studentNames[]" class="form-control @error('studentNames.'.$index) border-red-500 @enderror" value="{{ old('studentNames.'.$index, $student->name) }}">
+                                    @error('studentNames.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="studentClassrooms[]" class="form-control @error('studentClassrooms.'.$index) border-red-500 @enderror">
+                                        <option value="">-- Select Classroom --</option>
+                                        @foreach ($workshop->classrooms as $classroom)
+                                            <option value="{{ $classroom->id }}" {{ old('studentClassrooms.'.$index, $student->classroom_id) == $classroom->id ? 'selected' : '' }}>
+                                                {{ $classroom->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('studentClassrooms.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                @php
+                                    $prefs = $student->groupPreferences->keyBy('rank');
+                                @endphp
+                                <td>
+                                    <select name="studentPreference1[]" class="form-control @error('studentPreference1.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('studentPreference1.'.$index, $prefs->get(1)?->group_id) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('studentPreference1.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="studentPreference2[]" class="form-control @error('studentPreference2.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('studentPreference2.'.$index, $prefs->get(2)?->group_id) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('studentPreference2.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="studentPreference3[]" class="form-control @error('studentPreference3.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('studentPreference3.'.$index, $prefs->get(3)?->group_id) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('studentPreference3.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                            </tr>
+                        @endforeach
+                        <!-- Add new student rows -->
+                        @foreach (range(0, 9) as $index)
+                            <tr>
+                                <td>
+                                    <input type="text" name="newStudentNames[]" class="form-control @error('newStudentNames.'.$index) border-red-500 @enderror" value="{{ old('newStudentNames.'.$index) }}" placeholder="New student">
+                                    @error('newStudentNames.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="newStudentClassrooms[]" class="form-control @error('newStudentClassrooms.'.$index) border-red-500 @enderror">
+                                        <option value="">-- Select Classroom --</option>
+                                        @foreach ($workshop->classrooms as $classroom)
+                                            <option value="{{ $classroom->id }}" {{ old('newStudentClassrooms.'.$index) == $classroom->id ? 'selected' : '' }}>
+                                                {{ $classroom->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('newStudentClassrooms.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="newStudentPreference1[]" class="form-control @error('newStudentPreference1.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('newStudentPreference1.'.$index) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('newStudentPreference1.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="newStudentPreference2[]" class="form-control @error('newStudentPreference2.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('newStudentPreference2.'.$index) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('newStudentPreference2.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </td>
+                                <td>
+                                    <select name="newStudentPreference3[]" class="form-control @error('newStudentPreference3.'.$index) border-red-500 @enderror">
+                                        <option value="">-- None --</option>
+                                        @foreach ($workshop->groups as $group)
+                                            <option value="{{ $group->id }}" {{ old('newStudentPreference3.'.$index) == $group->id ? 'selected' : '' }}>
+                                                {{ $group->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('newStudentPreference3.'.$index)
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
                                 </td>
                             </tr>
                         @endforeach
