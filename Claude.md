@@ -123,6 +123,7 @@ Workshop (Event/Session)
 - ✓ Classroom management: create, edit within workshops (tab-based UI)
 - ✓ Student management: create, edit with classroom assignment (tab-based UI)
 - ✓ Preference collection: students can select up to 3 ranked group preferences
+- ✓ CSV import: bulk import groups, classrooms, students, and preferences from CSV file
 - ✗ Assignment algorithm (core feature) - not yet implemented
 - ✗ Manual adjustment interface - not yet implemented
 
@@ -179,6 +180,36 @@ Workshop (Event/Session)
 - Could be renamed in the future to be more specific (e.g., Groups → Projects)
 - Keeping it generic allows the system to be used for contexts beyond student/project scenarios
 - **Important**: Don't rename Groups to Projects without explicit user request
+
+## CSV Import Feature
+
+### Overview
+The system supports bulk importing of workshop data via CSV files. This feature is designed to match the format used in the Java reference implementation at `/home/nikitas/programming/java/project-group-splitter-java`.
+
+### CSV Format
+- **Separator**: Semicolon (`;`)
+- **Column 0**: Classroom name
+- **Column 1**: Student name (required)
+- **Columns 2+**: Group preferences
+  - Header row contains group names
+  - Data cells contain "1" to indicate a preference
+  - Multiple "1"s per row are ranked in order (1st choice, 2nd choice, 3rd choice)
+
+### Import Behavior
+1. **Groups**: Created from header row (columns 2+) with default values:
+   - Minimum participants: 8
+   - Maximum participants: 15
+   - Priority: 1
+2. **Classrooms**: Created from unique values in column 0
+3. **Students**: Created from column 1, assigned to classroom from column 0
+4. **Preferences**: Created for each "1" in student's row, ranked by column order
+5. **File handling**: Uploaded file is deleted immediately after processing
+6. **Transaction safety**: All operations wrapped in database transaction
+
+### Access
+- Available on workshop show/edit page via "Import from CSV" button
+- Auto-submits on file selection for smooth UX
+- Provides success/error feedback to user
 
 ## Development Setup
 

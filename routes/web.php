@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
 Route::group(['middleware' => ['auth', 'verified', ]], function () {
     Route::resource('workshops', WorkshopController::class)
         ->only(['index', 'create', 'store', 'show', 'update']);
+    Route::post('workshops/{workshop}/import', [WorkshopController::class, 'import'])->name('workshops.import');
     Route::resource('workshops.classrooms', ClassroomController::class)
         ->only(['create', 'store', 'show', 'update']);
 
