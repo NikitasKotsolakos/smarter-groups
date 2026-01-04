@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('group_preferences', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('student_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('group_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
             $table->integer('rank')->nullable(); // 1 = 1st choice, 2 = 2nd choice, 3 = 3rd choice
         });
     }
