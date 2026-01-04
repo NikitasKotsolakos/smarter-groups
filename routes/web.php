@@ -23,6 +23,8 @@ Route::group(['middleware' => ['auth', 'verified', ]], function () {
     Route::resource('workshops', WorkshopController::class)
         ->only(['index', 'create', 'store', 'show', 'update']);
     Route::post('workshops/{workshop}/import', [WorkshopController::class, 'import'])->name('workshops.import');
+    Route::post('workshops/{workshop}/run-algorithm', [WorkshopController::class, 'runAssignmentAlgorithm'])->name('workshops.run-algorithm');
+    Route::put('workshops/{workshop}/students/{student}/assignment', [WorkshopController::class, 'updateStudentAssignment'])->name('workshops.update-student-assignment');
     Route::resource('workshops.classrooms', ClassroomController::class)
         ->only(['create', 'store', 'show', 'update']);
 

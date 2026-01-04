@@ -89,6 +89,9 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Seed assignments for workshop 1 (as if algorithm had run)
+        $this->seedWorkshop1Assignments($workshop1, $admin, [$robotics, $artDesign, $music, $coding]);
+
         // Create second workshop
         $workshop2 = Workshop::create([
             'name' => 'Summer Activities 2026',
@@ -152,5 +155,40 @@ class DatabaseSeeder extends Seeder
         }
 
         return $preferences;
+    }
+
+    /**
+     * Seed assignments for workshop 1 (simulate algorithm results).
+     * Distributes 45 students across 4 groups in a balanced way.
+     */
+    private function seedWorkshop1Assignments(Workshop $workshop, User $admin, array $groups): void
+    {
+        [$robotics, $artDesign, $music, $coding] = $groups;
+
+        // Get all students for this workshop
+        $allStudents = $workshop->students()->get();
+
+        // Distribute students round-robin across groups
+        $groupsArray = [$robotics, $artDesign, $music, $coding];
+        $groupIndex = 0;
+
+        foreach ($allStudents as $student) {
+            $group = $groupsArray[$groupIndex];
+
+            // Attach student to group with metadata
+            $group->students()->attach($student->id, [
+                'assignment_method' => 'algorithm',
+                'assigned_at' => now(),
+                'assigned_by' => $admin->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Move to next group (round-robin)
+            $groupIndex = ($groupIndex + 1) % count($groupsArray);
+        }
+
+        // Update workshop status
+        $workshop->update(['assignment_status' => 'generated']);
     }
 }

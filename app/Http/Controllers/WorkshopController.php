@@ -58,7 +58,22 @@ class WorkshopController extends Controller
      */
     public function show(Workshop $workshop)
     {
-        return view('workshops.show', ['workshop' => $workshop]);
+        // Eager load relationships for assignments display
+        $workshop->load([
+            'groups.students.classroom',
+            'students.groups'
+        ]);
+
+        // Get unassigned students
+        $unassignedStudents = $workshop->students()
+            ->whereDoesntHave('groups')
+            ->with('classroom')
+            ->get();
+
+        return view('workshops.show', [
+            'workshop' => $workshop,
+            'unassignedStudents' => $unassignedStudents
+        ]);
     }
 
     /**
@@ -382,5 +397,98 @@ class WorkshopController extends Controller
                 @unlink($file->getRealPath());
             }
         }
+    }
+
+    /**
+     * Run the assignment algorithm to assign students to groups
+     */
+    public function runAssignmentAlgorithm(Request $request, Workshop $workshop)
+    {
+        // Validate preconditions
+        if ($workshop->groups()->count() === 0) {
+            return redirect(route('workshops.show', $workshop->id))
+                ->withErrors(['error' => 'Cannot run algorithm: No groups defined']);
+        }
+
+        if ($workshop->students()->count() === 0) {
+            return redirect(route('workshops.show', $workshop->id))
+                ->withErrors(['error' => 'Cannot run algorithm: No students defined']);
+        }
+
+        return DB::transaction(function () use ($workshop) {
+            // Clear existing assignments
+            DB::table('groups_students')
+                ->whereIn('group_id', $workshop->groups()->pluck('id'))
+                ->delete();
+
+            // Run stub algorithm (round-robin for now)
+            $groups = $workshop->groups()->get();
+            $students = $workshop->students()->get();
+
+            $groupIndex = 0;
+            foreach ($students as $student) {
+                $group = $groups[$groupIndex];
+
+                // Attach student to group with metadata
+                $group->students()->attach($student->id, [
+                    'assignment_method' => 'algorithm',
+                    'assigned_at' => now(),
+                    'assigned_by' => auth()->id(),
+                ]);
+
+                // Move to next group (round-robin)
+                $groupIndex = ($groupIndex + 1) % $groups->count();
+            }
+
+            // Update workshop status
+            $workshop->update(['assignment_status' => 'generated']);
+
+            return redirect(route('workshops.show', $workshop->id) . '#assignments')
+                ->with('success', 'Algorithm completed! ' . $students->count() . ' students assigned to ' . $groups->count() . ' groups.');
+        });
+    }
+
+    /**
+     * Update a student's group assignment
+     */
+    public function updateStudentAssignment(Request $request, Workshop $workshop, Student $student)
+    {
+        $request->validate([
+            'group_id' => 'required|integer|exists:groups,id',
+        ]);
+
+        $groupId = $request->input('group_id');
+
+        // Verify group belongs to this workshop
+        $group = Group::where('id', $groupId)
+            ->where('workshop_id', $workshop->id)
+            ->firstOrFail();
+
+        return DB::transaction(function () use ($workshop, $student, $group, $request) {
+            // Detach student from any current groups in this workshop
+            $workshopGroupIds = $workshop->groups()->pluck('id');
+            $student->groups()->detach($workshopGroupIds);
+
+            // Attach to new group with metadata
+            $student->groups()->attach($group->id, [
+                'assignment_method' => 'manual',
+                'assigned_at' => now(),
+                'assigned_by' => auth()->id(),
+            ]);
+
+            // Update workshop status to manually_edited
+            $workshop->update(['assignment_status' => 'manually_edited']);
+
+            // Support both form submission and AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student assignment updated successfully'
+                ]);
+            }
+
+            return redirect(route('workshops.show', $workshop->id) . '#assignments')
+                ->with('success', 'Student assignment updated successfully');
+        });
     }
 }

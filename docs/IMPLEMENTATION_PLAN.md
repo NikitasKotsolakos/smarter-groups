@@ -1,7 +1,7 @@
 # Group Splitter - Implementation Plan
 
-> **Status**: MVP Development - In Progress
-> **Last Updated**: 2026-01-03
+> **Status**: MVP Development - Assignments Feature Complete
+> **Last Updated**: 2026-01-05
 > **Related**: See [Claude.md](../Claude.md) for domain model and project overview
 
 ## Current Implementation Status
@@ -17,9 +17,10 @@
 - Database seeder functional
   - Creates default admin user (admin@admin.com / admin123)
   - Seeds 2 sample workshops with groups, classrooms, students, and preferences for testing
-  - Workshop 1: 45 students across 3 classrooms with 4 groups
-  - Workshop 2: 25 students across 2 classrooms with 3 groups
+  - Workshop 1: 45 students across 3 classrooms with 4 groups (with seeded assignments)
+  - Workshop 2: 25 students across 2 classrooms with 3 groups (no assignments - for testing)
   - Students have randomized preferences (1-3 choices each)
+  - Workshop 1 includes pre-generated assignments to test the Assignments tab
   - Run with: `php artisan db:seed` or `php artisan migrate:fresh --seed`
 - Frontend: Vite + Tailwind CSS + Alpine.js
 
@@ -53,20 +54,42 @@
   - ✓ Student preferences can be set (3 ranked choices via dropdowns)
   - ✓ Students are per-workshop (not shared across workshops)
 
+- **CSV Import** (Complete):
+  - ✓ Bulk import groups, classrooms, students, and preferences from CSV file
+  - ✓ Semicolon-separated format matching Java reference implementation
+  - ✓ Auto-creates groups with default capacity settings
+  - ✓ Assigns students to classrooms and creates ranked preferences
+  - ✓ Transaction-safe with file cleanup
+  - ✓ Available via "Import from CSV" button on workshop page
+
+- **Assignments Feature** (Complete for MVP):
+  - ✓ Assignments tab always visible in workshop view
+  - ✓ Empty state with "Run Algorithm" button when no assignments
+  - ✓ Database schema supports assignment tracking (`assignment_status` on workshops)
+  - ✓ Pivot metadata tracks assignment method (algorithm/manual), timestamp, and user
+  - ✓ Algorithm execution (basic round-robin implementation for MVP)
+  - ✓ Visual capacity indicators (✓ Green, ⚠ Yellow, ✕ Red) for each group
+  - ✓ Manual editing via dropdown per student
+  - ✓ Move students between groups one at a time
+  - ✓ Warnings section for unassigned students and capacity issues
+  - ✓ Re-run algorithm capability with confirmation dialog
+  - ✓ Assignment status tracking (none/generated/manually_edited)
+  - ✓ Model helper methods for capacity checking and status
+  - ✓ Routes: POST /run-algorithm, PUT /students/{id}/assignment
+  - ✓ Controller methods in WorkshopController
+
 ### Not Yet Implemented ✗
 
 #### Core Features (Critical)
-- **Assignment algorithm** (main feature - core functionality)
-  - Student-to-group assignment based on preferences
-  - Respect for min/max capacity constraints
+- **Advanced Assignment Algorithm** (current: basic round-robin stub)
+  - Preference-based optimization (currently ignores preferences)
   - Priority group handling
   - Ranked vs unranked preference modes
   - Classroom mixing (optional)
+  - Constraint satisfaction optimization
 
 #### User Interface & Workflows
-- Manual adjustment interface (teachers tweaking algorithm results)
-- Export/reporting features
-- Bulk student import from CSV (manual entry is implemented)
+- Export/reporting features (PDF, CSV export of assignments)
 
 #### Business Logic
 - Most business logic beyond basic CRUD
@@ -481,19 +504,29 @@ A successful MVP must:
    - Track changes to assignments over time
    - Ability to revert to previous assignments
    - Compare different algorithm runs
+   - Save multiple assignment versions per workshop
+   - Name and annotate different assignment attempts
 
-9. **Notifications**:
+9. **Assignment Enhancements**:
+   - CSV template download for bulk imports
+   - Bulk import validation and better error reporting
+   - Drag-and-drop student reassignment (alternative to dropdowns)
+   - Assignment metrics (preference satisfaction rate, balance scores)
+   - Undo/redo for manual edits
+   - Bulk move operations (move multiple students at once)
+
+10. **Notifications**:
    - Email students their assignments
    - Notify teachers when assignments are ready
    - Remind students to submit preferences
 
-7. **Analytics/Reporting**:
+11. **Analytics/Reporting**:
    - Dashboard showing preference satisfaction rates
    - Group popularity metrics
    - Classroom distribution reports
    - Historical data across multiple workshops
 
-8. **Advanced Algorithm Features**:
+12. **Advanced Algorithm Features**:
    - Student pairing preferences ("I want to be with X")
    - Student exclusion preferences ("Don't put me with Y")
    - Gender balancing
