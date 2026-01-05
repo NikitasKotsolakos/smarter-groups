@@ -332,14 +332,6 @@
                     </table>
                 </div>
 
-                <!-- Assignments Tab -->
-                <div x-show="activeTab === 'assignments'" x-cloak>
-                    @if($workshop->hasAssignments())
-                        @include('workshops.partials.assignments-display')
-                    @else
-                        @include('workshops.partials.assignments-empty-state')
-                    @endif
-                </div>
             </div>
 
             <div class="form-group mt-6" x-show="activeTab !== 'assignments'" x-cloak>
@@ -348,5 +340,14 @@
                 </button>
             </div>
         </form>
+
+        <!-- Assignments Tab (outside main form to avoid nesting) -->
+        <div x-show="activeTab === 'assignments'" x-cloak>
+            @if($workshop->hasAssignments())
+                @include('workshops.partials.assignments-display')
+            @else
+                @include('workshops.partials.assignments-empty-state')
+            @endif
+        </div>
     </div>
 </x-app-layout>
