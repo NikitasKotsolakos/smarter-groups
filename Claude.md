@@ -317,7 +317,30 @@ php artisan migrate:fresh
 php artisan db:seed
 ```
 
-### Testing & Demo Credentials
+### Testing
+
+**Algorithm Tests**:
+```bash
+# Run all algorithm tests
+php artisan test --group=algorithm
+
+# Run a specific test
+php artisan test --filter="simple perfect fit"
+
+# Run with verbose output
+php artisan test --group=algorithm --verbose
+
+# Run all tests
+php artisan test
+```
+
+**Test Fixtures**:
+- Location: `tests/Fixtures/Algorithm/`
+- 6 CSV test scenarios covering: perfect fit, priority ordering, preference satisfaction, capacity constraints, classroom mixing, and dynamic priority
+- Each test validates specific algorithm behaviors
+- See `tests/Fixtures/Algorithm/README.md` for detailed test case documentation
+
+### Demo Credentials
 **Default Admin User** (created by seeder):
 - Email: `admin@admin.com`
 - Password: `admin123`
