@@ -166,7 +166,7 @@
                                 <td class="px-4 py-2 text-sm text-gray-900">{{ $student->name }}</td>
                                 <td class="px-4 py-2 text-sm text-gray-500">{{ $student->classroom->name }}</td>
                                 <td class="px-4 py-2">
-                                    <select @change="updateAssignment({{ $student->id }}, $event.target.value)" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <select @change="updateAssignment({{ $student->id }}, $event.target.value)" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
                                         <option value="">-- Select Group --</option>
                                         @foreach($workshop->groups as $targetGroup)
                                             <option value="{{ $targetGroup->id }}" {{ $targetGroup->id == $group->id ? 'selected' : '' }}>
@@ -209,7 +209,7 @@
                         <td class="px-4 py-2 text-sm text-gray-900">{{ $student->name }}</td>
                         <td class="px-4 py-2 text-sm text-gray-500">{{ $student->classroom->name }}</td>
                         <td class="px-4 py-2">
-                            <select @change="updateAssignment({{ $student->id }}, $event.target.value)" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <select @change="updateAssignment({{ $student->id }}, $event.target.value)" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
                                 <option value="">-- Select Group --</option>
                                 @foreach($workshop->groups as $targetGroup)
                                     <option value="{{ $targetGroup->id }}">{{ $targetGroup->name }}</option>
