@@ -509,4 +509,47 @@ class WorkshopController extends Controller
                 ->with('success', 'Student assignment updated successfully');
         });
     }
+
+    /**
+     * Export workshop assignments to CSV
+     */
+    public function exportAssignments(Workshop $workshop)
+    {
+        // Get all assigned students with their groups and classrooms
+        $assignments = DB::table('groups_students')
+            ->join('students', 'groups_students.student_id', '=', 'students.id')
+            ->join('classrooms', 'students.classroom_id', '=', 'classrooms.id')
+            ->join('groups', 'groups_students.group_id', '=', 'groups.id')
+            ->where('groups.workshop_id', $workshop->id)
+            ->select(
+                'classrooms.name as classroom',
+                'students.name as student',
+                'groups.name as group'
+            )
+            ->orderBy('classrooms.name')
+            ->orderBy('students.name')
+            ->get();
+
+        // Determine CSV separator based on locale
+        // European locales (de, fr, es, etc.) use comma as decimal separator,
+        // so they typically use semicolon for CSV. English locales use comma.
+        $locale = app()->getLocale();
+        $europeanLocales = ['de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'el', 'hu', 'ro', 'sv', 'da', 'no', 'fi'];
+        $separator = in_array($locale, $europeanLocales) ? ';' : ',';
+
+        // Generate CSV content
+        $csv = "Classroom{$separator}Student Name{$separator}Assigned Group\n";
+
+        foreach ($assignments as $assignment) {
+            $csv .= "\"{$assignment->classroom}\"{$separator}\"{$assignment->student}\"{$separator}\"{$assignment->group}\"\n";
+        }
+
+        // Generate filename with workshop name and timestamp
+        $filename = 'assignments-' . \Illuminate\Support\Str::slug($workshop->name) . '-' . now()->format('Y-m-d') . '.csv';
+
+        // Return CSV as download
+        return response($csv, 200)
+            ->header('Content-Type', 'text/csv; charset=utf-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
 }
