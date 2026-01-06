@@ -8,10 +8,12 @@ use App\Models\GroupPreferences;
 use App\Models\Student;
 use App\Models\Workshop;
 use App\Services\AssignmentAlgorithm\AssignmentService;
+use App\Exports\AssignmentsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WorkshopController extends Controller
 {
@@ -511,45 +513,39 @@ class WorkshopController extends Controller
     }
 
     /**
-     * Export workshop assignments to CSV
+     * Export workshop assignments to CSV or Excel
      */
-    public function exportAssignments(Workshop $workshop)
+    public function exportAssignments(Request $request, Workshop $workshop)
     {
-        // Get all assigned students with their groups and classrooms
-        $assignments = DB::table('groups_students')
-            ->join('students', 'groups_students.student_id', '=', 'students.id')
-            ->join('classrooms', 'students.classroom_id', '=', 'classrooms.id')
-            ->join('groups', 'groups_students.group_id', '=', 'groups.id')
-            ->where('groups.workshop_id', $workshop->id)
-            ->select(
-                'classrooms.name as classroom',
-                'students.name as student',
-                'groups.name as group'
-            )
-            ->orderBy('classrooms.name')
-            ->orderBy('students.name')
-            ->get();
-
-        // Determine CSV separator based on locale
-        // European locales (de, fr, es, etc.) use comma as decimal separator,
-        // so they typically use semicolon for CSV. English locales use comma.
-        $locale = app()->getLocale();
-        $europeanLocales = ['de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'el', 'hu', 'ro', 'sv', 'da', 'no', 'fi'];
-        $separator = in_array($locale, $europeanLocales) ? ';' : ',';
-
-        // Generate CSV content
-        $csv = "Classroom{$separator}Student Name{$separator}Assigned Group\n";
-
-        foreach ($assignments as $assignment) {
-            $csv .= "\"{$assignment->classroom}\"{$separator}\"{$assignment->student}\"{$separator}\"{$assignment->group}\"\n";
-        }
+        $format = $request->query('format', 'csv'); // Default to CSV
 
         // Generate filename with workshop name and timestamp
-        $filename = 'assignments-' . \Illuminate\Support\Str::slug($workshop->name) . '-' . now()->format('Y-m-d') . '.csv';
+        $baseFilename = 'assignments-' . \Illuminate\Support\Str::slug($workshop->name) . '-' . now()->format('Y-m-d');
 
-        // Return CSV as download
-        return response($csv, 200)
-            ->header('Content-Type', 'text/csv; charset=utf-8')
-            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+        // Export based on format
+        if ($format === 'xlsx' || $format === 'xls') {
+            $extension = $format === 'xls' ? 'xls' : 'xlsx';
+            $filename = "{$baseFilename}.{$extension}";
+
+            // Create export instance (delimiter not needed for Excel)
+            $export = new AssignmentsExport($workshop);
+
+            return Excel::download($export, $filename,
+                $format === 'xls' ? \Maatwebsite\Excel\Excel::XLS : \Maatwebsite\Excel\Excel::XLSX
+            );
+        } else {
+            // CSV export with locale-aware delimiter
+            $filename = "{$baseFilename}.csv";
+
+            // Determine CSV delimiter based on locale
+            $locale = app()->getLocale();
+            $europeanLocales = ['de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'el', 'hu', 'ro', 'sv', 'da', 'no', 'fi'];
+            $delimiter = in_array($locale, $europeanLocales) ? ';' : ',';
+
+            // Create export instance with delimiter
+            $export = new AssignmentsExport($workshop, $delimiter);
+
+            return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::CSV);
+        }
     }
 }
