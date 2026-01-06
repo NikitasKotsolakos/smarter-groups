@@ -169,7 +169,7 @@ To add a new test case:
    - Setup details
    - Expected results
    - What it tests
-3. Add corresponding test in `tests/Feature/AssignmentAlgorithmTest.php`
+3. Add corresponding test in `tests/Feature/Assignment/AssignmentAlgorithmTest.php`
 4. Run the test to verify it works
 
 ## Notes

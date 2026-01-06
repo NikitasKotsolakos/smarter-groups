@@ -335,10 +335,10 @@ php artisan test
 ```
 
 **Test Fixtures**:
-- Location: `tests/Fixtures/Algorithm/`
+- Location: `tests/Feature/Assignment/Fixtures/`
 - 6 CSV test scenarios covering: perfect fit, priority ordering, preference satisfaction, capacity constraints, classroom mixing, and dynamic priority
 - Each test validates specific algorithm behaviors
-- See `tests/Fixtures/Algorithm/README.md` for detailed test case documentation
+- See `tests/Feature/Assignment/Fixtures/README.md` for detailed test case documentation
 
 ### Demo Credentials
 **Default Admin User** (created by seeder):
