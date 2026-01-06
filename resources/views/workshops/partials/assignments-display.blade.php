@@ -77,6 +77,16 @@
                 Re-run Algorithm
             </button>
         </form>
+
+        <button type="button"
+                x-data=""
+                x-on:click.prevent="$dispatch('open-modal', 'confirm-clear-assignments')"
+                class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Clear All Assignments
+        </button>
     </div>
 </div>
 
@@ -238,5 +248,35 @@
         </table>
     </div>
 @endif
+
+{{-- Clear Assignments Modal --}}
+<x-modal name="confirm-clear-assignments" focusable>
+    <form method="post" action="{{ route('workshops.clear-assignments', $workshop->id) }}" class="p-6">
+        @csrf
+        @method('delete')
+
+        <h2 class="text-lg font-medium text-gray-900">
+            Clear all student assignments?
+        </h2>
+
+        <p class="mt-3 text-sm text-gray-600">
+            This will remove all students from their assigned groups. Students and groups will not be deleted.
+        </p>
+
+        <p class="mt-2 text-sm text-gray-600">
+            You can re-run the algorithm or manually assign students afterwards.
+        </p>
+
+        <div class="mt-6 flex justify-end gap-3">
+            <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                Cancel
+            </x-secondary-button>
+
+            <x-danger-button>
+                Clear Assignments
+            </x-danger-button>
+        </div>
+    </form>
+</x-modal>
 
 </div> {{-- Close Alpine.js wrapper --}}

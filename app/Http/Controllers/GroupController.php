@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\Workshop;
 use Illuminate\Http\Request;
 
 class GroupController extends Controller
@@ -58,8 +59,27 @@ class GroupController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Group $group)
+    public function destroy(Workshop $workshop, Group $group)
     {
-        //
+        // Verify group belongs to workshop
+        if ($group->workshop_id !== $workshop->id) {
+            abort(404, 'Group not found in this workshop.');
+        }
+
+        // Authorization check
+        if ($workshop->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Count assigned students
+        $assignedStudentCount = $group->students()->count();
+        $groupName = $group->name;
+
+        // Delete group (cascades to preferences and assignments)
+        $group->delete();
+
+        // Redirect back to groups tab
+        return redirect(route('workshops.show', $workshop->id) . '#groups')
+            ->with('success', "Group '{$groupName}' deleted successfully. {$assignedStudentCount} students were unassigned.");
     }
 }

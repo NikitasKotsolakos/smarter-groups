@@ -126,15 +126,17 @@ Workshop (Event/Session)
 ### Quick Status Summary
 - ✓ Basic Laravel setup complete with authentication
 - ✓ Database models and migrations in place
-- ✓ Workshop management: create, list, view, edit (user-scoped)
-- ✓ Group management: create, edit within workshops (tab-based UI)
-- ✓ Classroom management: create, edit within workshops (tab-based UI)
-- ✓ Student management: create, edit with classroom assignment (tab-based UI)
+- ✓ Workshop management: create, list, view, edit, delete (user-scoped)
+- ✓ Group management: create, edit, delete within workshops (tab-based UI)
+- ✓ Classroom management: create, edit, delete within workshops (tab-based UI)
+- ✓ Student management: create, edit, delete with classroom assignment (tab-based UI)
 - ✓ Preference collection: students can select up to 3 ranked group preferences
 - ✓ CSV import: bulk import groups, classrooms, students, and preferences from CSV file
 - ✓ Assignments tab: view and manage student-group assignments
 - ✓ Assignment algorithm: **full priority-based greedy algorithm with dynamic adjustment**
 - ✓ Manual adjustment interface: dropdown-based editing of student assignments with AJAX updates
+- ✓ Delete operations: workshops, groups, classrooms, students with modal confirmations and cascade cleanup
+- ✓ Clear assignments: remove all student-group assignments without deleting entities
 - ✓ Warnings & validation: comprehensive error and warning display for assignment issues
 
 ## Technical Stack
@@ -291,6 +293,90 @@ Workshops track their assignment state via `assignment_status` field:
 - Available as "Assignments" tab in workshop show/edit page
 - Visible to all workshops regardless of assignment status
 - Separate from the main workshop edit form
+
+## Delete Operations
+
+### Overview
+The system provides comprehensive delete functionality for all major entities with safety measures to prevent accidental data loss.
+
+### Features
+
+**Workshop Deletion**:
+- Delete button located at the bottom of workshop edit page (below main form, hidden on Assignments tab)
+- Deletes workshop and all related data via database cascade:
+  - All groups
+  - All classrooms
+  - All students
+  - All group preferences
+  - All assignments
+- Modal confirmation showing counts of what will be deleted
+- Success message displays deletion statistics
+- Redirects to workshop index after deletion
+
+**Group Deletion**:
+- Inline "Delete" button in each group row (Groups tab)
+- Removes group and unassigns all students from it
+- Deletes all preferences for that group
+- Modal shows count of students that will be unassigned
+- Redirects to Groups tab after deletion
+
+**Classroom Deletion**:
+- Inline "Delete" button in each classroom row (Classrooms tab)
+- Cascades to delete all students in the classroom
+- Deletes student preferences and assignments
+- Modal shows count of students that will be deleted
+- Strong warning about data loss
+- Redirects to Classrooms tab after deletion
+
+**Student Deletion**:
+- Inline "Delete" button in each student row (Students tab)
+- Removes student, their preferences, and assignments
+- Modal confirmation for each student
+- Redirects to Students tab after deletion
+
+**Clear All Assignments**:
+- Red button in Assignments tab action bar
+- Removes all student-group assignments without deleting students or groups
+- Updates workshop status to 'none'
+- Modal confirmation explaining that students/groups remain
+- Redirects to Assignments tab after clearing
+- Useful for re-running algorithm or starting fresh
+
+### Safety Measures
+
+1. **Modal Confirmations**: Every delete operation requires confirmation
+2. **Warning Messages**: Modals show exactly what will be deleted with counts
+3. **Authorization**: Users can only delete their own workshop data
+4. **Cascade Information**: Clear messaging about related data that will be removed
+5. **Success Feedback**: Deletion statistics shown after successful operation
+6. **Tab Preservation**: Redirects return to the appropriate tab with hash fragment
+
+### Database Behavior
+
+All foreign key constraints use `cascadeOnDelete()`, ensuring:
+- No orphaned records
+- Automatic cleanup of related data
+- Database integrity maintained
+- No manual cascade logic needed in controllers
+
+### Routes
+
+```php
+DELETE /workshops/{workshop}                        // Delete workshop
+DELETE /workshops/{workshop}/groups/{group}         // Delete group
+DELETE /workshops/{workshop}/classrooms/{classroom} // Delete classroom
+DELETE /workshops/{workshop}/students/{student}     // Delete student
+DELETE /workshops/{workshop}/clear-assignments      // Clear assignments
+```
+
+### Controllers
+
+- **WorkshopController**: `destroy()`, `clearAssignments()`
+- **GroupController**: `destroy()`
+- **ClassroomController**: `destroy()`
+- **StudentController**: `destroy()`
+
+All controllers perform authorization checks and gather deletion statistics before removing data.
 
 ## Development Setup
 

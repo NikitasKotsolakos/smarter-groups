@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\Workshop;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -58,8 +59,27 @@ class StudentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Student $student)
+    public function destroy(Workshop $workshop, Student $student)
     {
-        //
+        // Verify student belongs to workshop (through classroom)
+        $classroom = $student->classroom;
+        if (!$classroom || $classroom->workshop_id !== $workshop->id) {
+            abort(404, 'Student not found in this workshop.');
+        }
+
+        // Authorization check
+        if ($workshop->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Store student name
+        $studentName = $student->name;
+
+        // Delete student (cascades to preferences and assignments)
+        $student->delete();
+
+        // Redirect back to students tab
+        return redirect(route('workshops.show', $workshop->id) . '#students')
+            ->with('success', "Student '{$studentName}' deleted successfully.");
     }
 }

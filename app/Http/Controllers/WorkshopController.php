@@ -292,7 +292,51 @@ class WorkshopController extends Controller
      */
     public function destroy(Workshop $workshop)
     {
-        //
+        // Authorization check
+        if ($workshop->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Gather statistics before deletion
+        $groupCount = $workshop->groups()->count();
+        $classroomCount = $workshop->classrooms()->count();
+        $studentCount = $workshop->students()->count();
+        $workshopName = $workshop->name;
+
+        // Delete (cascades handle everything)
+        $workshop->delete();
+
+        // Redirect to workshop list
+        return redirect()->route('workshops.index')
+            ->with('success', "Workshop '{$workshopName}' deleted successfully. Removed {$groupCount} groups, {$classroomCount} classrooms, and {$studentCount} students.");
+    }
+
+    /**
+     * Clear all student assignments for a workshop.
+     */
+    public function clearAssignments(Workshop $workshop)
+    {
+        // Authorization check
+        if ($workshop->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Count assignments before clearing
+        $assignmentCount = DB::table('groups_students')
+            ->whereIn('group_id', $workshop->groups()->pluck('id'))
+            ->count();
+
+        // Clear all assignments
+        DB::table('groups_students')
+            ->whereIn('group_id', $workshop->groups()->pluck('id'))
+            ->delete();
+
+        // Update workshop status
+        $workshop->update(['assignment_status' => 'none']);
+
+        // Redirect back to assignments tab
+        return redirect(route('workshops.show', $workshop->id) . '#assignments')
+            ->with('success', "Cleared {$assignmentCount} student assignments.");
     }
 
     /**
