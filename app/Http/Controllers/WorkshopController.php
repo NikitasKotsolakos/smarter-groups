@@ -363,6 +363,14 @@ class WorkshopController extends Controller
             }
 
             return DB::transaction(function () use ($csvData, $workshop) {
+                // Delete all existing data before importing
+                // This ensures a clean slate for the new import
+                $workshop->groups()->delete(); // Cascades to delete group preferences and assignments
+                $workshop->classrooms()->delete(); // Cascades to delete students, their preferences, and assignments
+
+                // Reset workshop assignment status
+                $workshop->update(['assignment_status' => 'none']);
+
                 // First row is headers
                 $headers = array_shift($csvData);
 

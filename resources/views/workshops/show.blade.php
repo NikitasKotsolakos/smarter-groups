@@ -21,14 +21,52 @@
         @endif
 
         <!-- CSV Import Form (separate form) -->
-        <form method="POST" action="{{ route('workshops.import', $workshop->id) }}" enctype="multipart/form-data" class="mb-4">
+        <form method="POST" action="{{ route('workshops.import', $workshop->id) }}" enctype="multipart/form-data" class="mb-4" onsubmit="return confirmImport(event)">
             @csrf
             <label class="btn bg-blue-500 hover:bg-blue-600 text-white cursor-pointer inline-block">
-                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
+                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="handleFileSelect(this)">
                 📁 Import from CSV
             </label>
-            <span class="text-gray-600 text-sm ml-2">Upload CSV with students & preferences</span>
+            <span class="text-gray-600 text-sm ml-2">Upload CSV with students & preferences (will replace all existing data)</span>
         </form>
+
+        <script>
+            let selectedFile = null;
+
+            function handleFileSelect(input) {
+                selectedFile = input.files[0];
+                if (selectedFile) {
+                    input.form.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            }
+
+            function confirmImport(event) {
+                if (!selectedFile) {
+                    event.preventDefault();
+                    return false;
+                }
+
+                const hasData = {{ ($workshop->groups->count() > 0 || $workshop->classrooms->count() > 0 || $workshop->students->count() > 0) ? 'true' : 'false' }};
+
+                if (hasData) {
+                    const message = 'WARNING: This will DELETE all existing data in this workshop:\n\n' +
+                                  '• {{ $workshop->groups->count() }} groups\n' +
+                                  '• {{ $workshop->classrooms->count() }} classrooms\n' +
+                                  '• {{ $workshop->students->count() }} students\n' +
+                                  '• All group preferences and assignments\n\n' +
+                                  'This action cannot be undone. Continue with import?';
+
+                    if (!confirm(message)) {
+                        event.preventDefault();
+                        selectedFile = null;
+                        event.target.reset();
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        </script>
 
         <form autocomplete="off" method="POST" action="{{ route("workshops.update", $workshop->id) }}" enctype="multipart/form-data">
             @csrf
