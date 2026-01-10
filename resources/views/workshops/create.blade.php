@@ -12,22 +12,20 @@
 
         <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data">
             @csrf
-            <div class="form-group mb-6">
-                <label class="required" for="name">Workshop Name</label>
-                <input class="form-control @error('name') border-red-500 @enderror" type="text" name="name" value="{{ old('name') }}" required autofocus>
-                @error('name')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                @enderror
+            <div class="mb-6">
+                <x-input-label for="name" :value="__('Workshop Name')" class="required" />
+                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full @error('name') border-red-500 @enderror" :value="old('name')" required autofocus />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 <p class="text-gray-600 text-sm mt-2">You'll be able to add groups, classrooms, and students after creating the workshop.</p>
             </div>
 
-            <div class="form-group flex gap-3">
-                <button class="btn btn-danger" type="submit">
+            <div class="flex gap-3">
+                <x-primary-button type="submit">
                     Create Workshop
-                </button>
-                <a href="{{ route('workshops.index') }}" class="btn bg-gray-500 hover:bg-gray-600 text-white">
+                </x-primary-button>
+                <x-button-link href="{{ route('workshops.index') }}" variant="secondary">
                     Cancel
-                </a>
+                </x-button-link>
             </div>
         </form>
     </div>
