@@ -1420,6 +1420,19 @@ Establish patterns:
 - Component library approach ensures consistency going forward
 - All changes maintain Laravel Breeze patterns and conventions
 
+## Known Issues
+
+### Testing Configuration Cache
+When running tests, always clear the configuration cache first to ensure phpunit.xml environment settings are applied correctly. The `.env` file uses `SESSION_DRIVER=database` while tests require `SESSION_DRIVER=array` (set in phpunit.xml). Cached configuration can cause tests to fail with 419 CSRF errors.
+
+**Solution:** Run `php artisan config:clear` before running tests:
+```bash
+php artisan config:clear && php artisan test --compact
+```
+
+### Assignment Algorithm Bug
+There is a known bug in the assignment algorithm where capacity constraints are not fully respected. Test `04: capacity constraints` expects 15 students to be assigned (3 groups × 5 max each) but only 14 are being assigned. This is a separate issue from the UX improvements and predates this work.
+
 ---
 
 **End of Plan**
