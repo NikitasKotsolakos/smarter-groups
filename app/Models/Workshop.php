@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Workshop extends Model
 {
-    protected $fillable = ["name", "user_id"];
+    protected $fillable = ["name", "user_id", "assignment_status"];
 
     public function groups(): HasMany
     {
@@ -29,6 +29,24 @@ class Workshop extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Check if workshop has any assignments
+     */
+    public function hasAssignments(): bool
+    {
+        return $this->assignment_status !== 'none';
+    }
+
+    /**
+     * Get count of students without group assignments
+     */
+    public function getUnassignedStudentsCount(): int
+    {
+        return $this->students()
+            ->whereDoesntHave('groups')
+            ->count();
     }
 
 }
