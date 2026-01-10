@@ -1,4 +1,4 @@
-# Group Splitter Style Guide
+# Smarter Groups Style Guide
 
 **Version:** 1.0
 **Last Updated:** 2026-01-10
@@ -26,7 +26,7 @@
 ### Core Values
 
 1. **Professional Clarity**
-   The Group Splitter is an educational tool for managing workshops and student assignments. The design should feel professional, trustworthy, and efficient - not playful or overly decorative.
+   Smarter Groups is an educational tool for managing workshops and student assignments. The design should feel professional, trustworthy, and efficient - not playful or overly decorative.
 
 2. **Functional Simplicity**
    Every element should serve a purpose. Remove visual clutter. Prioritize clear hierarchy and easy scanning of information.

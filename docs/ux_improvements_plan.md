@@ -1,5 +1,5 @@
 # UX Improvements Implementation Plan
-## Group Splitter Laravel Application
+## Smarter Groups Laravel Application
 
 **Created:** 2026-01-08
 **Status:** Draft - Awaiting Approval
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This plan addresses critical UX issues identified in the Group Splitter Laravel application, focusing on:
+This plan addresses critical UX issues identified in the Smarter Groups Laravel application, focusing on:
 1. **Critical:** 49 phantom CSS class references causing unstyled elements
 2. **High Priority:** Font inconsistency between welcome page (Inter) and app (Figtree)
 3. **High Priority:** Lack of unified design system and color palette
@@ -739,7 +739,7 @@ File: `resources/views/components/application-logo.blade.php`
     </div>
     @if(isset($showText) && $showText)
         <span class="ml-3 text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-            Group Splitter
+            Smarter Groups
         </span>
     @endif
 </div>

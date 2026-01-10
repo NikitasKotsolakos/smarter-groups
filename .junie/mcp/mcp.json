@@ -4,7 +4,7 @@
             "command": "wsl.exe",
             "args": [
                 "/home/nikitas/.config/herd-lite/bin/php",
-                "/home/nikitas/programming/laravel/group-splitter/artisan",
+                "/home/nikitas/programming/laravel/smarter-groups/artisan",
                 "boost:mcp"
             ]
         }

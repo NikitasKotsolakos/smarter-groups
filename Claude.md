@@ -1,10 +1,19 @@
-# Group Splitter - Laravel Application
+# Smarter Groups - Laravel Application
+
+## Project History
+
+This project was originally named "Group Splitter" and the repository was called `group-splitter`. It was renamed to "Smarter Groups" (`smarter-groups`) in January 2026. You may encounter references to the old name in:
+- Git history
+- External documentation
+- The Java reference implementation at `/home/nikitas/programming/java/project-group-splitter-java`
+
+---
 
 > **Related Documentation**: See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for current status, algorithm requirements, and development roadmap.
 
 ## Project Overview
 
-**Group Splitter** is a web application designed to help teachers/organizers assign participants (typically students) to groups within workshops based on their preferences and constraints.
+**Smarter Groups** is a web application designed to help teachers/organizers assign participants (typically students) to groups within workshops based on their preferences and constraints.
 
 ### Main Purpose
 - Teachers create workshops with multiple groups (projects/activities)
