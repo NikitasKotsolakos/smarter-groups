@@ -411,11 +411,9 @@ npm run dev
 # Run migrations
 php artisan migrate
 
-# Fresh migration (drops all tables)
-php artisan migrate:fresh
+# Fresh migration (drops all tables and reseeds database to create user)
+php artisan migrate:fresh --seed
 
-# Seed database (creates admin user)
-php artisan db:seed
 ```
 
 ### Testing
