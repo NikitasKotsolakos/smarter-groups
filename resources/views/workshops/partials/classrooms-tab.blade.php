@@ -1,12 +1,16 @@
 {{-- Classrooms Tab Content --}}
 {{-- Receives: $workshop --}}
 
-<div x-data="{ newClassroomRows: 3 }">
+<div x-data="{ newClassroomRows: 3, submitting: false }">
     {{-- Section Header with Update Button --}}
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-medium text-gray-900">Manage Classrooms</h3>
-        <x-primary-button type="submit">
-            Update Classrooms
+        <x-primary-button type="submit" x-bind:disabled="submitting" @click="submitting = true">
+            <span x-show="!submitting">Update Classrooms</span>
+            <span x-show="submitting" class="flex items-center">
+                <x-loading-spinner size="sm" class="mr-2" />
+                Saving...
+            </span>
         </x-primary-button>
     </div>
 

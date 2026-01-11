@@ -154,24 +154,44 @@
             {{-- Tab Content --}}
             <div>
                 {{-- Groups Tab --}}
-                <div x-show="activeTab === 'groups'" x-cloak role="tabpanel">
+                <div x-show="activeTab === 'groups'"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     role="tabpanel">
                     @include('workshops.partials.groups-tab')
                 </div>
 
                 {{-- Classrooms Tab --}}
-                <div x-show="activeTab === 'classrooms'" x-cloak role="tabpanel">
+                <div x-show="activeTab === 'classrooms'"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     role="tabpanel">
                     @include('workshops.partials.classrooms-tab')
                 </div>
 
                 {{-- Students Tab --}}
-                <div x-show="activeTab === 'students'" x-cloak role="tabpanel">
+                <div x-show="activeTab === 'students'"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     role="tabpanel">
                     @include('workshops.partials.students-tab')
                 </div>
             </div>
         </form>
 
         {{-- Assignments Tab (outside main form - has its own forms) --}}
-        <div x-show="activeTab === 'assignments'" x-cloak role="tabpanel">
+        <div x-show="activeTab === 'assignments'"
+             x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             role="tabpanel">
             @if($workshop->hasAssignments())
                 @include('workshops.partials.assignments-display')
             @else
