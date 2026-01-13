@@ -1,4 +1,4 @@
-# Group Splitter - Implementation Plan
+# Smarter Groups - Implementation Plan
 
 > **Status**: MVP Development - Delete Operations Complete
 > **Last Updated**: 2026-01-06

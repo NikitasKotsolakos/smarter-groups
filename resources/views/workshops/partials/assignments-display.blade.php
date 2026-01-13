@@ -1,7 +1,5 @@
 {{-- Alpine.js data wrapper for AJAX functionality --}}
 <div x-data="{
-    successMessage: '',
-    errorMessage: '',
     async updateAssignment(studentId, groupId) {
         try {
             const response = await fetch('{{ route('workshops.update-student-assignment', [$workshop->id, ':studentId']) }}'.replace(':studentId', studentId), {
@@ -17,42 +15,32 @@
             const data = await response.json();
 
             if (response.ok) {
-                this.successMessage = data.message || 'Student assignment updated successfully';
-                this.errorMessage = '';
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: { message: data.message || 'Student assignment updated successfully', type: 'success' }
+                }));
                 // Reload page to show updated assignments
                 setTimeout(() => window.location.reload(), 500);
             } else {
-                this.errorMessage = data.message || 'Failed to update assignment';
-                this.successMessage = '';
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: { message: data.message || 'Failed to update assignment', type: 'error' }
+                }));
             }
         } catch (error) {
-            this.errorMessage = 'An error occurred while updating the assignment';
-            this.successMessage = '';
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { message: 'An error occurred while updating the assignment', type: 'error' }
+            }));
         }
     }
 }">
 
-{{-- Success/Error messages --}}
-<div x-show="successMessage" x-cloak class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-    <span x-text="successMessage"></span>
-</div>
-<div x-show="errorMessage" x-cloak class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-    <span x-text="errorMessage"></span>
-</div>
-
 {{-- Action bar --}}
 <div class="mb-6 flex justify-between items-center">
     <div>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-            @if($workshop->assignment_status === 'generated') bg-green-100 text-green-800
-            @elseif($workshop->assignment_status === 'manually_edited') bg-blue-100 text-blue-800
-            @endif">
-            @if($workshop->assignment_status === 'generated')
-                Algorithm Generated
-            @elseif($workshop->assignment_status === 'manually_edited')
-                Manually Edited
-            @endif
-        </span>
+        @if($workshop->assignment_status === 'generated')
+            <x-badge variant="success">Algorithm Generated</x-badge>
+        @elseif($workshop->assignment_status === 'manually_edited')
+            <x-badge variant="info">Manually Edited</x-badge>
+        @endif
     </div>
 
     <div class="flex gap-2">
@@ -71,10 +59,15 @@
         </a>
 
         <form method="POST" action="{{ route('workshops.run-algorithm', $workshop->id) }}"
-              onsubmit="return confirm('This will clear all current assignments. Are you sure?')">
+              x-data="{ running: false }"
+              @submit="if (!confirm('This will clear all current assignments. Are you sure?')) { $event.preventDefault(); return; } running = true;">
             @csrf
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                Re-run Algorithm
+            <button type="submit" x-bind:disabled="running" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150">
+                <span x-show="!running">Re-run Algorithm</span>
+                <span x-show="running" class="flex items-center">
+                    <x-loading-spinner size="sm" class="mr-2" />
+                    Running...
+                </span>
             </button>
         </form>
 
@@ -94,55 +87,42 @@
 @if(session('assignment_warnings'))
     @php
         $warnings = session('assignment_warnings');
-        $errors = array_filter($warnings, fn($w) => $w['severity'] === 'error');
+        $algorithmErrors = array_filter($warnings, fn($w) => $w['severity'] === 'error');
         $regularWarnings = array_filter($warnings, fn($w) => $w['severity'] === 'warning');
     @endphp
 
-    @if(count($errors) > 0)
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <h4 class="text-sm font-medium text-red-800 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                Errors
-            </h4>
-            <ul class="space-y-2 text-sm text-red-700">
-                @foreach($errors as $warning)
+    @if(count($algorithmErrors) > 0)
+        <x-alert type="error" class="mb-6">
+            <h4 class="font-medium mb-2">Errors</h4>
+            <ul class="space-y-1">
+                @foreach($algorithmErrors as $warning)
                     <li class="flex items-start">
-                        <span class="mr-2">•</span>
+                        <span class="mr-2">-</span>
                         <span>{{ $warning['message'] }}</span>
                     </li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     @if(count($regularWarnings) > 0)
-        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <h4 class="text-sm font-medium text-yellow-800 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                Warnings
-            </h4>
-            <ul class="space-y-2 text-sm text-yellow-700">
+        <x-alert type="warning" class="mb-6">
+            <h4 class="font-medium mb-2">Warnings</h4>
+            <ul class="space-y-1">
                 @foreach($regularWarnings as $warning)
                     <li class="flex items-start">
-                        <span class="mr-2">•</span>
+                        <span class="mr-2">-</span>
                         <span>{{ $warning['message'] }}</span>
                     </li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 @elseif($unassignedStudents->count() > 0)
     {{-- Fallback for existing unassigned students display --}}
-    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-        <h4 class="text-sm font-medium text-yellow-800 mb-2">⚠ Warnings</h4>
-        <ul class="list-disc list-inside text-sm text-yellow-700">
-            <li>{{ $unassignedStudents->count() }} student(s) not assigned to any group</li>
-        </ul>
-    </div>
+    <x-alert type="warning" class="mb-6">
+        <strong>Warnings:</strong> {{ $unassignedStudents->count() }} student(s) not assigned to any group
+    </x-alert>
 @endif
 
 {{-- Groups with assignments --}}
@@ -161,17 +141,17 @@
 
                     {{-- Status indicator --}}
                     @if($status === 'ok')
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                            ✓ {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }}
-                        </span>
+                        <x-badge variant="success" size="sm">
+                            {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }}
+                        </x-badge>
                     @elseif($status === 'under')
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                            ⚠ {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }} (Under minimum)
-                        </span>
+                        <x-badge variant="warning" size="sm">
+                            {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }} (Under minimum)
+                        </x-badge>
                     @elseif($status === 'over')
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                            ✕ {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }} (Over maximum)
-                        </span>
+                        <x-badge variant="error" size="sm">
+                            {{ $currentCount }}/{{ $group->minimumParticipants }}-{{ $group->maximumParticipants }} (Over maximum)
+                        </x-badge>
                     @endif
                 </div>
             </div>

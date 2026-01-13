@@ -112,11 +112,11 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
    - Use "localhost" for the VPS itself
 
 2. **Create New Project**
-   - Name: "Group Splitter"
+   - Name: "Smarter Groups"
 
 3. **Add Application**
    - Source: GitHub repository
-   - Repository: `https://github.com/NikitasKotsolakos/group-splitter`
+   - Repository: `https://github.com/NikitasKotsolakos/smarter-groups`
    - Branch: `main` (or `results-presentation`)
 
 4. **Configure Application**
@@ -128,7 +128,7 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 
 5. **Environment Variables**
    ```env
-   APP_NAME="Group Splitter"
+   APP_NAME="Smarter Groups"
    APP_ENV=production
    APP_KEY=<generate with: php artisan key:generate --show>
    APP_DEBUG=false
@@ -141,8 +141,8 @@ curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
    # DB_CONNECTION=mysql
    # DB_HOST=mysql
    # DB_PORT=3306
-   # DB_DATABASE=group_splitter
-   # DB_USERNAME=group_splitter
+   # DB_DATABASE=smarter_groups
+   # DB_USERNAME=smarter_groups
    # DB_PASSWORD=<generate-strong-password>
 
    SESSION_DRIVER=file
