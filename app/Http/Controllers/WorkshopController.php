@@ -14,9 +14,13 @@ class WorkshopController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): View
     {
-        //
+        $workshops = Workshop::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('workshops.index', ['workshops' => $workshops]);
     }
 
     /**
@@ -35,6 +39,7 @@ class WorkshopController extends Controller
         return DB::transaction(function () use ($request) {
             $workshop = Workshop::create([
                 'name' => $request->input('name'),
+                'user_id' => auth()->id(),
             ]);
 
             $groupNames = $request->input('groupNames');

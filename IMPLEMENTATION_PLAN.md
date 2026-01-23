@@ -1,6 +1,6 @@
 # Group Splitter - Implementation Plan
 
-> **Status**: Planning Phase
+> **Status**: MVP Development - In Progress
 > **Last Updated**: 2026-01-03
 > **Related**: See [Claude.md](Claude.md) for domain model and project overview
 
@@ -16,7 +16,8 @@
   - User login/logout functional
 - Database seeder functional
   - Creates default admin user (admin@admin.com / admin123)
-  - Run with: `php artisan db:seed`
+  - Seeds 2 sample workshops with groups for testing
+  - Run with: `php artisan db:seed` or `php artisan migrate:fresh --seed`
 - Frontend: Vite + Tailwind CSS + Alpine.js
 
 #### Data Models
@@ -31,10 +32,15 @@
   - ProfileController
 
 #### Features Implemented
-- **Workshop Management**:
-  - Users can create workshops with groups and their parameters
-  - Users can view workshops
+- **Workshop Management** (Partially Complete):
+  - ✓ Users can create workshops with groups and their parameters
+  - ✓ Users can view individual workshop details
+  - ✓ Users can see list of all their workshops
+  - ✓ Workshops are user-scoped (each user sees only their own workshops)
+  - ✓ Workshop listing shows name, group count, and creation date
+  - ✓ Navigation includes "My Workshops" link
   - Groups can be created with min/max participants and priority settings
+  - Workshop editing not fully implemented yet
 
 ### Not Yet Implemented ✗
 
@@ -114,6 +120,7 @@
    - When different values: preferences are ranked (1st, 2nd, 3rd choice)
 
 2. **Workshop table enhancements**
+   - ✓ `user_id` foreign key: COMPLETED - Workshops now belong to users
    - `allow_ranking` boolean: Control if students can rank preferences for this workshop
    - `allow_classroom_mixing` boolean: Whether to try mixing classrooms in algorithm
    - `status` field: Track if workshop is draft/active/completed
@@ -130,10 +137,12 @@
 
 ### Model Relationship Issues
 
-1. Workshop model doesn't define relationship to Classrooms
-2. Group model doesn't define relationship to Students
-3. Student model relationships need to be verified
-4. Classroom model relationships need to be verified
+1. ✓ Workshop → User relationship: COMPLETED (belongsTo)
+2. Workshop model doesn't define relationship to Classrooms
+3. Workshop model doesn't define relationship to Students
+4. Group model doesn't define relationship to Students
+5. Student model relationships need to be verified
+6. Classroom model relationships need to be verified
 
 ### Code Quality Issues
 
@@ -199,11 +208,12 @@ A simple, focused application that allows teachers to complete the entire workfl
 - **Tweaking needed**: Review if current implementation needs any adjustments
 
 #### 2. Workshop Management
-- ✓ User can create a workshop (already implemented)
-- **New**: User can see list of all their workshops
-- **New**: User can see details of a specific workshop (dashboard view)
-- **New**: User can edit workshop details (name, etc.)
-- Workshop status tracking (draft, active, completed)
+- ✓ User can create a workshop (implemented)
+- ✓ User can see list of all their workshops (implemented)
+- ✓ User can see details of a specific workshop (implemented)
+- ✓ Workshops are scoped to users (user_id foreign key added)
+- **In Progress**: User can edit workshop details (name, etc.)
+- **Pending**: Workshop status tracking (draft, active, completed)
 
 #### 3. Group Management (within a workshop)
 - ✓ User can create groups for a workshop (already implemented)
@@ -319,15 +329,18 @@ A simple, focused application that allows teachers to complete the entire workfl
 ### MVP Data Model Implications
 
 #### Required Schema Changes
-1. **Students table**: Add `workshop_id` foreign key (students are per-workshop)
-2. **Classrooms table**: Add `workshop_id` foreign key (classrooms are per-workshop)
-3. **GroupPreferences table**: Add `rank` field (nullable, default null for MVP unranked mode)
-4. **Workshops table**: Add `status` field (draft/active/completed)
-5. **GroupsStudents table**: Consider adding:
+1. ✓ **Workshops table**: Add `user_id` foreign key - COMPLETED
+2. **Students table**: Add `workshop_id` foreign key (students are per-workshop)
+3. **Classrooms table**: Add `workshop_id` foreign key (classrooms are per-workshop)
+4. **GroupPreferences table**: Add `rank` field (nullable, default null for MVP unranked mode)
+5. **Workshops table**: Add `status` field (draft/active/completed)
+6. **GroupsStudents table**: Consider adding:
    - `assigned_by`: 'algorithm' or 'manual'
    - `assigned_at`: timestamp
 
 #### Relationships to Update
+- ✓ Workshop → belongsTo User - COMPLETED
+- ✓ User → hasMany Workshops - COMPLETED (implicit)
 - Workshop → hasMany Students
 - Workshop → hasMany Classrooms
 - Student → belongsTo Workshop
