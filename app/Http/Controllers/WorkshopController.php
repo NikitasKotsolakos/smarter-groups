@@ -36,6 +36,14 @@ class WorkshopController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'groupNames.*' => 'nullable|string|max:255',
+            'minimumParticipants.*' => 'required|integer|min:0',
+            'maximumParticipants.*' => 'required|integer|min:0',
+            'priorityGroups.*' => 'required|integer|min:1',
+        ]);
+
         return DB::transaction(function () use ($request) {
             $workshop = Workshop::create([
                 'name' => $request->input('name'),
@@ -51,12 +59,22 @@ class WorkshopController extends Controller
 
             for ($i = 0; $i < count($groupNames); $i++) {
                 if(!empty($groupNames[$i])){
+                    $min = (int) $minimumParticipants[$i];
+                    $max = (int) $maximumParticipants[$i];
+
+                    // Validate min <= max
+                    if ($min > $max) {
+                        return redirect(route('workshops.create'))
+                            ->withErrors(['error' => "Group '{$groupNames[$i]}': Minimum participants cannot be greater than maximum participants."])
+                            ->withInput();
+                    }
+
                     $newGroups->push(
                         Group::create([
                             'workshop_id' => $workshop->id,
                             'name' => $groupNames[$i],
-                            'minimumParticipants' => $minimumParticipants[$i],
-                            'maximumParticipants' => $maximumParticipants[$i],
+                            'minimumParticipants' => $min,
+                            'maximumParticipants' => $max,
                             'priorityGroup' => $priorityGroups[$i],
 
                         ])
@@ -92,7 +110,53 @@ class WorkshopController extends Controller
      */
     public function update(Request $request, Workshop $workshop)
     {
-        abort(400, 'Not implemented yet');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'groupNames.*' => 'nullable|string|max:255',
+            'minimumParticipants.*' => 'required|integer|min:0',
+            'maximumParticipants.*' => 'required|integer|min:0',
+            'priorityGroups.*' => 'required|integer|min:1',
+        ]);
+
+        return DB::transaction(function () use ($request, $workshop) {
+            // Update workshop name
+            $workshop->update([
+                'name' => $request->input('name'),
+            ]);
+
+            // Update existing groups
+            $groupIds = $request->input('groupIds', []);
+            $groupNames = $request->input('groupNames', []);
+            $minimumParticipants = $request->input('minimumParticipants', []);
+            $maximumParticipants = $request->input('maximumParticipants', []);
+            $priorityGroups = $request->input('priorityGroups', []);
+
+            foreach ($groupIds as $index => $groupId) {
+                if (!empty($groupNames[$index])) {
+                    $min = (int) $minimumParticipants[$index];
+                    $max = (int) $maximumParticipants[$index];
+
+                    // Validate min <= max
+                    if ($min > $max) {
+                        return redirect(route('workshops.show', $workshop->id))
+                            ->withErrors(['error' => "Group '{$groupNames[$index]}': Minimum participants cannot be greater than maximum participants."])
+                            ->withInput();
+                    }
+
+                    Group::where('id', $groupId)
+                        ->where('workshop_id', $workshop->id) // Ensure group belongs to this workshop
+                        ->update([
+                            'name' => $groupNames[$index],
+                            'minimumParticipants' => $min,
+                            'maximumParticipants' => $max,
+                            'priorityGroup' => $priorityGroups[$index],
+                        ]);
+                }
+            }
+
+            return redirect(route('workshops.show', $workshop->id))
+                ->with('success', 'Workshop updated successfully!');
+        });
     }
 
     /**

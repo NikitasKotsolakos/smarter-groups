@@ -116,8 +116,8 @@ Workshop (Event/Session)
 ### Quick Status Summary
 - ✓ Basic Laravel setup complete with authentication
 - ✓ Database models and migrations in place
-- ✓ Workshop management: create, list, view (user-scoped)
-- ✓ Group creation within workshops
+- ✓ Workshop management: create, list, view, edit (user-scoped)
+- ✓ Group management: create, edit within workshops
 - ✗ Assignment algorithm (core feature) - not yet implemented
 - ✗ Student management and preference collection - not yet implemented
 - ✗ Manual adjustment interface - not yet implemented
