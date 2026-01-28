@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Classroom;
 use App\Models\Group;
 use App\Models\Workshop;
 use Illuminate\Http\Request;
@@ -116,6 +117,8 @@ class WorkshopController extends Controller
             'minimumParticipants.*' => 'required|integer|min:0',
             'maximumParticipants.*' => 'required|integer|min:0',
             'priorityGroups.*' => 'required|integer|min:1',
+            'classroomNames.*' => 'nullable|string|max:255',
+            'newClassroomNames.*' => 'nullable|string|max:255',
         ]);
 
         return DB::transaction(function () use ($request, $workshop) {
@@ -151,6 +154,31 @@ class WorkshopController extends Controller
                             'maximumParticipants' => $max,
                             'priorityGroup' => $priorityGroups[$index],
                         ]);
+                }
+            }
+
+            // Update existing classrooms
+            $classroomIds = $request->input('classroomIds', []);
+            $classroomNames = $request->input('classroomNames', []);
+
+            foreach ($classroomIds as $index => $classroomId) {
+                if (!empty($classroomNames[$index])) {
+                    Classroom::where('id', $classroomId)
+                        ->where('workshop_id', $workshop->id) // Ensure classroom belongs to this workshop
+                        ->update([
+                            'name' => $classroomNames[$index],
+                        ]);
+                }
+            }
+
+            // Create new classrooms
+            $newClassroomNames = $request->input('newClassroomNames', []);
+            foreach ($newClassroomNames as $classroomName) {
+                if (!empty($classroomName)) {
+                    Classroom::create([
+                        'name' => $classroomName,
+                        'workshop_id' => $workshop->id,
+                    ]);
                 }
             }
 
