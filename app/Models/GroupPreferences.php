@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class GroupPreferences extends Model
 {
 
-    protected $fillable = ["student_id", "group_id"];
+    protected $fillable = ["student_id", "group_id", "rank"];
 
     public function group(): BelongsTo
     {

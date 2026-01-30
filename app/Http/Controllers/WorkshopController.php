@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Classroom;
 use App\Models\Group;
+use App\Models\GroupPreferences;
+use App\Models\Student;
 use App\Models\Workshop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -119,6 +121,16 @@ class WorkshopController extends Controller
             'priorityGroups.*' => 'required|integer|min:1',
             'classroomNames.*' => 'nullable|string|max:255',
             'newClassroomNames.*' => 'nullable|string|max:255',
+            'studentNames.*' => 'nullable|string|max:255',
+            'studentClassrooms.*' => 'nullable|integer|exists:classrooms,id',
+            'studentPreference1.*' => 'nullable|integer|exists:groups,id',
+            'studentPreference2.*' => 'nullable|integer|exists:groups,id',
+            'studentPreference3.*' => 'nullable|integer|exists:groups,id',
+            'newStudentNames.*' => 'nullable|string|max:255',
+            'newStudentClassrooms.*' => 'nullable|integer|exists:classrooms,id',
+            'newStudentPreference1.*' => 'nullable|integer|exists:groups,id',
+            'newStudentPreference2.*' => 'nullable|integer|exists:groups,id',
+            'newStudentPreference3.*' => 'nullable|integer|exists:groups,id',
         ]);
 
         return DB::transaction(function () use ($request, $workshop) {
@@ -179,6 +191,82 @@ class WorkshopController extends Controller
                         'name' => $classroomName,
                         'workshop_id' => $workshop->id,
                     ]);
+                }
+            }
+
+            // Update existing students
+            $studentIds = $request->input('studentIds', []);
+            $studentNames = $request->input('studentNames', []);
+            $studentClassrooms = $request->input('studentClassrooms', []);
+            $studentPreference1 = $request->input('studentPreference1', []);
+            $studentPreference2 = $request->input('studentPreference2', []);
+            $studentPreference3 = $request->input('studentPreference3', []);
+
+            foreach ($studentIds as $index => $studentId) {
+                if (!empty($studentNames[$index])) {
+                    // Get student and verify it belongs to this workshop (through classroom)
+                    $student = Student::find($studentId);
+                    if ($student && $student->classroom && $student->classroom->workshop_id == $workshop->id) {
+                        // Update student
+                        $student->update([
+                            'name' => $studentNames[$index],
+                            'classroom_id' => $studentClassrooms[$index] ?? null,
+                        ]);
+
+                        // Delete existing preferences and recreate
+                        $student->groupPreferences()->delete();
+
+                        // Create new preferences
+                        $preferences = [
+                            1 => $studentPreference1[$index] ?? null,
+                            2 => $studentPreference2[$index] ?? null,
+                            3 => $studentPreference3[$index] ?? null,
+                        ];
+
+                        foreach ($preferences as $rank => $groupId) {
+                            if (!empty($groupId)) {
+                                GroupPreferences::create([
+                                    'student_id' => $student->id,
+                                    'group_id' => $groupId,
+                                    'rank' => $rank,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Create new students
+            $newStudentNames = $request->input('newStudentNames', []);
+            $newStudentClassrooms = $request->input('newStudentClassrooms', []);
+            $newStudentPreference1 = $request->input('newStudentPreference1', []);
+            $newStudentPreference2 = $request->input('newStudentPreference2', []);
+            $newStudentPreference3 = $request->input('newStudentPreference3', []);
+
+            foreach ($newStudentNames as $index => $studentName) {
+                if (!empty($studentName) && !empty($newStudentClassrooms[$index])) {
+                    // Create student
+                    $student = Student::create([
+                        'name' => $studentName,
+                        'classroom_id' => $newStudentClassrooms[$index],
+                    ]);
+
+                    // Create preferences
+                    $preferences = [
+                        1 => $newStudentPreference1[$index] ?? null,
+                        2 => $newStudentPreference2[$index] ?? null,
+                        3 => $newStudentPreference3[$index] ?? null,
+                    ];
+
+                    foreach ($preferences as $rank => $groupId) {
+                        if (!empty($groupId)) {
+                            GroupPreferences::create([
+                                'student_id' => $student->id,
+                                'group_id' => $groupId,
+                                'rank' => $rank,
+                            ]);
+                        }
+                    }
                 }
             }
 

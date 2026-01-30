@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignId('student_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('group_id')->nullable()->constrained()->cascadeOnDelete();
-
+            $table->integer('rank')->nullable(); // 1 = 1st choice, 2 = 2nd choice, 3 = 3rd choice
         });
     }
 

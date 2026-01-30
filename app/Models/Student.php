@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
-    protected $fillable = ["name"];
+    protected $fillable = ["name", "classroom_id"];
 
     public function groupPreferences(): HasMany
     {

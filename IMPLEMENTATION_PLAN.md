@@ -40,11 +40,15 @@
   - ✓ Workshops are user-scoped (each user sees only their own workshops)
   - ✓ Workshop listing shows name, group count, and creation date
   - ✓ Navigation includes "My Workshops" link
-  - ✓ Tab-based UI for managing Groups and Classrooms
+  - ✓ Tab-based UI for managing Groups, Classrooms, and Students
   - ✓ Groups can be created with min/max participants and priority settings
   - ✓ Groups can be edited (name, min/max, priority)
   - ✓ Classrooms can be created and edited (name)
   - ✓ Classrooms are per-workshop (not shared across workshops)
+  - ✓ Students can be created with name and classroom assignment
+  - ✓ Students can be edited (name, classroom, preferences)
+  - ✓ Student preferences can be set (3 ranked choices via dropdowns)
+  - ✓ Students are per-workshop (not shared across workshops)
 
 ### Not Yet Implemented ✗
 
@@ -57,11 +61,9 @@
   - Classroom mixing (optional)
 
 #### User Interface & Workflows
-- Student management interface (add/import students to workshops)
-- Classroom management and assignment to workshops
-- Preference collection interface (students ranking their group choices)
 - Manual adjustment interface (teachers tweaking algorithm results)
 - Export/reporting features
+- Bulk student import from CSV (manual entry is implemented)
 
 #### Business Logic
 - Most business logic beyond basic CRUD
@@ -117,11 +119,10 @@
 
 ### Database Schema Issues
 
-1. **GroupPreferences missing rank field**
-   - Need to add a `rank` or `preference_order` field
-   - Should be nullable or have default value to support unranked preferences
-   - When null or all same value: preferences are equal (unranked mode)
-   - When different values: preferences are ranked (1st, 2nd, 3rd choice)
+1. ✓ **GroupPreferences rank field** - COMPLETED
+   - Added `rank` field (nullable integer)
+   - Supports ranked preferences (1 = 1st choice, 2 = 2nd choice, 3 = 3rd choice)
+   - Can be extended to support unranked mode in the future (all null or all same value)
 
 2. **Workshop table enhancements**
    - ✓ `user_id` foreign key: COMPLETED - Workshops now belong to users
@@ -142,11 +143,12 @@
 ### Model Relationship Issues
 
 1. ✓ Workshop → User relationship: COMPLETED (belongsTo)
-2. Workshop model doesn't define relationship to Classrooms
-3. Workshop model doesn't define relationship to Students
-4. Group model doesn't define relationship to Students
-5. Student model relationships need to be verified
-6. Classroom model relationships need to be verified
+2. ✓ Workshop → Classrooms relationship: COMPLETED (hasMany)
+3. ✓ Workshop → Students relationship: COMPLETED (hasManyThrough Classroom)
+4. ✓ Student → Classroom relationship: COMPLETED (belongsTo)
+5. ✓ Student → GroupPreferences relationship: COMPLETED (hasMany)
+6. ✓ Classroom → Workshop relationship: COMPLETED (belongsTo)
+7. Group model doesn't define relationship to Students (will be needed for assignment results)
 
 ### Code Quality Issues
 
@@ -231,11 +233,12 @@ A simple, focused application that allows teachers to complete the entire workfl
 - ✓ Visual display of group parameters in table (implemented)
 
 #### 4. Student Management (per-workshop)
-- **New**: User can add students to a workshop (manual entry form)
-- **New**: User can edit student details (name, classroom)
-- **New**: User can delete students (with validation - warn if has preferences)
-- Students belong to a specific workshop (not shared across workshops)
-- Simple list/table view of all students in a workshop
+- ✓ User can add students to a workshop (manual entry form) (implemented)
+- ✓ User can edit student details (name, classroom) (implemented)
+- ✓ Students belong to a specific workshop (not shared across workshops) (implemented)
+- ✓ Simple table view of all students in a workshop (implemented)
+- ✓ Tab-based UI for managing students (implemented)
+- **Pending**: User can delete students (with validation - warn if has preferences)
 
 #### 5. Classroom Management (per-workshop)
 - ✓ User can create classrooms for a workshop (implemented)
@@ -246,11 +249,12 @@ A simple, focused application that allows teachers to complete the entire workfl
 - **Pending**: User can assign students to classrooms (in student management)
 
 #### 6. Preference Collection
-- **New**: User can set preferences for each student
-- **New**: Student can select 2-3 groups they're interested in
-- **No ranking** for MVP - all preferences have equal weight
-- UI: Simple checkboxes or multi-select for groups
-- Validation: Prevent selecting more groups than allowed
+- ✓ User can set preferences for each student (implemented)
+- ✓ Student can select up to 3 groups (1st, 2nd, 3rd choice) (implemented)
+- ✓ Preferences are ranked (1st, 2nd, 3rd choice via dropdowns) (implemented)
+- ✓ UI: Dropdown selects for each preference rank (implemented)
+- ✓ All preferences are optional (can leave empty) (implemented)
+- **Note**: Implemented with ranking for MVP (can add unranked mode later if needed)
 
 #### 7. Assignment Algorithm
 - **New**: Port specific algorithm from Java implementation (`/home/nikitas/programming/java/project-group-splitter-java`)

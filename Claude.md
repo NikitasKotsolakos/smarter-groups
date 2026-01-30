@@ -76,7 +76,7 @@ Workshop (Event/Session)
 - **Attributes**:
   - `student_id`: Foreign key to Student
   - `group_id`: Foreign key to Group
-  - `rank` or `preference_order`: (TO BE ADDED) Indicates preference ranking
+  - `rank`: Nullable integer indicating preference ranking (1 = 1st choice, 2 = 2nd choice, 3 = 3rd choice)
 - **Preference Ranking System** (flexible):
   - Students can select 2-3 groups as preferences, though they'll only be assigned to one
   - **Ranking is optional and flexible**:
@@ -121,8 +121,8 @@ Workshop (Event/Session)
 - ✓ Workshop management: create, list, view, edit (user-scoped)
 - ✓ Group management: create, edit within workshops (tab-based UI)
 - ✓ Classroom management: create, edit within workshops (tab-based UI)
-- ✗ Student management - not yet implemented
-- ✗ Preference collection - not yet implemented
+- ✓ Student management: create, edit with classroom assignment (tab-based UI)
+- ✓ Preference collection: students can select up to 3 ranked group preferences
 - ✗ Assignment algorithm (core feature) - not yet implemented
 - ✗ Manual adjustment interface - not yet implemented
 
