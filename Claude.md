@@ -211,9 +211,16 @@ php artisan db:seed
 - Password: `admin123`
 
 **Sample Data** (created by seeder):
-- 2 workshops with groups pre-populated for testing
-- "Spring Project Workshop" with 4 groups
-- "Summer Activities 2026" with 3 groups
+- 2 workshops with groups, classrooms, students, and preferences pre-populated for testing
+- **Workshop 1: "Spring Project Workshop"**
+  - 4 groups: Robotics, Art & Design, Music Production, Coding & Tech
+  - 3 classrooms: 5A (15 students), 5B (16 students), 5C (14 students)
+  - Total: 45 students with randomized group preferences
+- **Workshop 2: "Summer Activities 2026"**
+  - 3 groups: Sports & Athletics, Drama & Theater, Science Lab
+  - 2 classrooms: 6A (12 students), 6B (13 students)
+  - Total: 25 students with randomized group preferences
+- Students have 1-3 ranked preferences each (randomized for testing)
 
 **Testing Workflow**:
 1. Run `php artisan migrate:fresh --seed` to reset database with sample data
