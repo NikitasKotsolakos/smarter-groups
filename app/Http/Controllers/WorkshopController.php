@@ -41,54 +41,15 @@ class WorkshopController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'groupNames.*' => 'nullable|string|max:255',
-            'minimumParticipants.*' => 'required|integer|min:0',
-            'maximumParticipants.*' => 'required|integer|min:0',
-            'priorityGroups.*' => 'required|integer|min:1',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $workshop = Workshop::create([
-                'name' => $request->input('name'),
-                'user_id' => auth()->id(),
-            ]);
+        $workshop = Workshop::create([
+            'name' => $request->input('name'),
+            'user_id' => auth()->id(),
+        ]);
 
-            $groupNames = $request->input('groupNames');
-            $minimumParticipants = $request->input('minimumParticipants');
-            $maximumParticipants = $request->input('maximumParticipants');
-            $priorityGroups = $request->input('priorityGroups');
-
-            $newGroups = new Collection();
-
-            for ($i = 0; $i < count($groupNames); $i++) {
-                if(!empty($groupNames[$i])){
-                    $min = (int) $minimumParticipants[$i];
-                    $max = (int) $maximumParticipants[$i];
-
-                    // Validate min <= max
-                    if ($min > $max) {
-                        return redirect(route('workshops.create'))
-                            ->withErrors(['error' => "Group '{$groupNames[$i]}': Minimum participants cannot be greater than maximum participants."])
-                            ->withInput();
-                    }
-
-                    $newGroups->push(
-                        Group::create([
-                            'workshop_id' => $workshop->id,
-                            'name' => $groupNames[$i],
-                            'minimumParticipants' => $min,
-                            'maximumParticipants' => $max,
-                            'priorityGroup' => $priorityGroups[$i],
-
-                        ])
-                    );
-                }
-            }
-            $workshop->groups()->saveMany($newGroups);
-            return redirect(route('workshops.show', $workshop->id));
-
-        });
-
+        return redirect(route('workshops.show', $workshop->id))
+            ->with('success', 'Workshop created successfully! Now add groups, classrooms, and students.');
     }
 
 
@@ -119,6 +80,10 @@ class WorkshopController extends Controller
             'minimumParticipants.*' => 'required|integer|min:0',
             'maximumParticipants.*' => 'required|integer|min:0',
             'priorityGroups.*' => 'required|integer|min:1',
+            'newGroupNames.*' => 'nullable|string|max:255',
+            'newMinimumParticipants.*' => 'nullable|integer|min:0',
+            'newMaximumParticipants.*' => 'nullable|integer|min:0',
+            'newPriorityGroups.*' => 'nullable|integer|min:1',
             'classroomNames.*' => 'nullable|string|max:255',
             'newClassroomNames.*' => 'nullable|string|max:255',
             'studentNames.*' => 'nullable|string|max:255',
@@ -166,6 +131,35 @@ class WorkshopController extends Controller
                             'maximumParticipants' => $max,
                             'priorityGroup' => $priorityGroups[$index],
                         ]);
+                }
+            }
+
+            // Create new groups
+            $newGroupNames = $request->input('newGroupNames', []);
+            $newMinimumParticipants = $request->input('newMinimumParticipants', []);
+            $newMaximumParticipants = $request->input('newMaximumParticipants', []);
+            $newPriorityGroups = $request->input('newPriorityGroups', []);
+
+            foreach ($newGroupNames as $index => $groupName) {
+                if (!empty($groupName)) {
+                    $min = (int) ($newMinimumParticipants[$index] ?? 10);
+                    $max = (int) ($newMaximumParticipants[$index] ?? 20);
+                    $priority = (int) ($newPriorityGroups[$index] ?? 1);
+
+                    // Validate min <= max
+                    if ($min > $max) {
+                        return redirect(route('workshops.show', $workshop->id))
+                            ->withErrors(['error' => "Group '{$groupName}': Minimum participants cannot be greater than maximum participants."])
+                            ->withInput();
+                    }
+
+                    Group::create([
+                        'workshop_id' => $workshop->id,
+                        'name' => $groupName,
+                        'minimumParticipants' => $min,
+                        'maximumParticipants' => $max,
+                        'priorityGroup' => $priority,
+                    ]);
                 }
             }
 
