@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Group extends Model
 {
-    protected $fillable = ["name", "minimumParticipants", "maximumParticipants", "priorityGroup"];
+    protected $fillable = ["name", "minimumParticipants", "maximumParticipants", "priorityGroup", "workshop_id"];
 
     public function students(): BelongsToMany
     {
