@@ -14,6 +14,16 @@
             </div>
         @endif
 
+        <!-- CSV Import Form (separate form) -->
+        <form method="POST" action="{{ route('workshops.import', $workshop->id) }}" enctype="multipart/form-data" class="mb-4">
+            @csrf
+            <label class="btn bg-blue-500 hover:bg-blue-600 text-white cursor-pointer inline-block">
+                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
+                📁 Import from CSV
+            </label>
+            <span class="text-gray-600 text-sm ml-2">Upload CSV with students & preferences</span>
+        </form>
+
         <form autocomplete="off" method="POST" action="{{ route("workshops.update", $workshop->id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
