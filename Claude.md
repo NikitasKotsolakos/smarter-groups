@@ -32,6 +32,7 @@ Workshop (Event/Session)
 - **Attributes**:
   - `name`: Name of the workshop
   - `user_id`: Foreign key to User (who created the workshop)
+  - `assignment_status`: Enum ('none', 'generated', 'manually_edited') tracking assignment state
 - **Relationships**:
   - Belongs to User (creator/owner)
   - Has many Groups
@@ -110,6 +111,7 @@ Workshop (Event/Session)
 ### Key Relationships (Pivot Tables)
 - **workshop_classrooms**: Many-to-many between Workshops and Classrooms
 - **groups_students**: Many-to-many between Groups and Students (final assignments)
+  - Includes metadata: `assignment_method` (algorithm/manual), `assigned_at`, `assigned_by`
 
 ## Current Implementation Status
 
@@ -124,8 +126,9 @@ Workshop (Event/Session)
 - ✓ Student management: create, edit with classroom assignment (tab-based UI)
 - ✓ Preference collection: students can select up to 3 ranked group preferences
 - ✓ CSV import: bulk import groups, classrooms, students, and preferences from CSV file
-- ✗ Assignment algorithm (core feature) - not yet implemented
-- ✗ Manual adjustment interface - not yet implemented
+- ✓ Assignments tab: view and manage student-group assignments
+- ✓ Assignment algorithm: basic round-robin implementation (stub for MVP)
+- ✓ Manual adjustment interface: dropdown-based editing of student assignments
 
 ## Technical Stack
 
@@ -211,6 +214,47 @@ The system supports bulk importing of workshop data via CSV files. This feature 
 - Auto-submits on file selection for smooth UX
 - Provides success/error feedback to user
 
+## Assignments Feature
+
+### Overview
+The Assignments tab allows teachers to run the assignment algorithm and view/edit the results. This is the core feature where students are assigned to groups based on their preferences and constraints.
+
+### Features
+1. **Always-visible tab**: The Assignments tab is always present in the workshop view
+2. **Empty state**: Shows helpful message and "Run Algorithm" button when no assignments exist
+3. **Algorithm execution**: One-click algorithm run that distributes students across groups
+4. **Visual feedback**: Color-coded capacity indicators for each group:
+   - ✓ Green: Within capacity (between min and max)
+   - ⚠ Yellow: Under minimum capacity
+   - ✕ Red: Over maximum capacity
+5. **Manual editing**: Dropdown per student to move them between groups
+6. **Warnings section**: Highlights unassigned students and capacity issues
+7. **Re-run capability**: Option to re-run algorithm (clears existing assignments)
+8. **Assignment tracking**: Records who assigned students (algorithm vs manual) and when
+
+### Assignment Status
+Workshops track their assignment state via `assignment_status` field:
+- `none`: No assignments have been made
+- `generated`: Algorithm has run
+- `manually_edited`: Teacher has manually modified assignments
+
+### Current Algorithm
+- **Implementation**: Basic round-robin distribution (MVP stub)
+- **Behavior**: Evenly distributes students across all groups in order
+- **Future**: Will be replaced with preference-based optimization algorithm
+
+### Database Schema
+- **Pivot table**: `groups_students` stores final assignments
+- **Metadata fields**:
+  - `assignment_method`: 'algorithm' or 'manual'
+  - `assigned_at`: Timestamp of assignment
+  - `assigned_by`: User ID who made the assignment
+
+### Access
+- Available as "Assignments" tab in workshop show/edit page
+- Visible to all workshops regardless of assignment status
+- Separate from the main workshop edit form
+
 ## Development Setup
 
 ### Running the Application
@@ -243,14 +287,16 @@ php artisan db:seed
 
 **Sample Data** (created by seeder):
 - 2 workshops with groups, classrooms, students, and preferences pre-populated for testing
-- **Workshop 1: "Spring Project Workshop"**
+- **Workshop 1: "Spring Project Workshop"** *(includes seeded assignments)*
   - 4 groups: Robotics, Art & Design, Music Production, Coding & Tech
   - 3 classrooms: 5A (15 students), 5B (16 students), 5C (14 students)
   - Total: 45 students with randomized group preferences
-- **Workshop 2: "Summer Activities 2026"**
+  - **Pre-assigned**: All students distributed across groups (round-robin) with `assignment_status = 'generated'`
+- **Workshop 2: "Summer Activities 2026"** *(no assignments - for testing empty state)*
   - 3 groups: Sports & Athletics, Drama & Theater, Science Lab
   - 2 classrooms: 6A (12 students), 6B (13 students)
   - Total: 25 students with randomized group preferences
+  - **No assignments**: Use this to test the "Run Algorithm" feature
 - Students have 1-3 ranked preferences each (randomized for testing)
 
 **Testing Workflow**:

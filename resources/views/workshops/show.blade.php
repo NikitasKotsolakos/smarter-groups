@@ -1,5 +1,11 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" x-data="{ activeTab: 'groups' }">
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" x-data="{
+        activeTab: window.location.hash ? window.location.hash.substring(1) : 'groups',
+        setTab(tab) {
+            this.activeTab = tab;
+            window.location.hash = tab;
+        }
+    }">
         @if(session('success'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                 {{ session('success') }}
@@ -39,20 +45,25 @@
             <!-- Tab Headers -->
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-8">
-                    <button type="button" @click="activeTab = 'groups'"
+                    <button type="button" @click="setTab('groups')"
                             :class="activeTab === 'groups' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Groups ({{ $workshop->groups->count() }})
                     </button>
-                    <button type="button" @click="activeTab = 'classrooms'"
+                    <button type="button" @click="setTab('classrooms')"
                             :class="activeTab === 'classrooms' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Classrooms ({{ $workshop->classrooms->count() }})
                     </button>
-                    <button type="button" @click="activeTab = 'students'"
+                    <button type="button" @click="setTab('students')"
                             :class="activeTab === 'students' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Students ({{ $workshop->students->count() }})
+                    </button>
+                    <button type="button" @click="setTab('assignments')"
+                            :class="activeTab === 'assignments' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Assignments
                     </button>
                 </nav>
             </div>
@@ -320,9 +331,18 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Assignments Tab -->
+                <div x-show="activeTab === 'assignments'" x-cloak>
+                    @if($workshop->hasAssignments())
+                        @include('workshops.partials.assignments-display')
+                    @else
+                        @include('workshops.partials.assignments-empty-state')
+                    @endif
+                </div>
             </div>
 
-            <div class="form-group mt-6">
+            <div class="form-group mt-6" x-show="activeTab !== 'assignments'" x-cloak>
                 <button class="btn btn-danger" type="submit">
                     Update Workshop
                 </button>
