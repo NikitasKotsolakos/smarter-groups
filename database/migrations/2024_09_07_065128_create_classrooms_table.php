@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('name');
-            $table->foreignId('workshop_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('workshop_id')->constrained()->cascadeOnDelete();
         });
     }
 
