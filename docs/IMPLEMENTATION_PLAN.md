@@ -234,7 +234,6 @@ A simple, focused application that allows teachers to complete the entire workfl
 - ✓ User can edit existing groups (name, min/max participants, priority) (implemented)
 - **Pending**: User can delete groups (with validation - can't delete if has assigned students)
 - ✓ Visual display of group parameters in table (implemented)
-- **Pending**: Groups are not created correctly (but are updated ok). Classrooms on the other end are. To be fixed.
 
 #### 4. Student Management (per-workshop)
 - ✓ User can add students to a workshop (manual entry form) (implemented)
@@ -259,6 +258,19 @@ A simple, focused application that allows teachers to complete the entire workfl
 - ✓ UI: Dropdown selects for each preference rank (implemented)
 - ✓ All preferences are optional (can leave empty) (implemented)
 - **Note**: Implemented with ranking for MVP (can add unranked mode later if needed)
+
+#### 6b. Bulk Data Import
+- ✓ CSV import functionality (implemented)
+  - User can upload CSV file with semicolon separator
+  - Automatically creates groups, classrooms, students, and preferences
+  - Groups extracted from header row (columns 3+)
+  - Classrooms from column 1
+  - Students from column 2, assigned to classrooms
+  - Preferences where cell contains "1" (ranked by order)
+  - File deleted immediately after processing
+  - Default group values: 8-15 participants, priority 1
+- **Pending**: Provide downloadable CSV template for users
+- **Pending**: Bulk import validation and error reporting (row-by-row)
 
 #### 7. Assignment Algorithm
 - **New**: Port specific algorithm from Java implementation (`/home/nikitas/programming/java/project-group-splitter-java`)
