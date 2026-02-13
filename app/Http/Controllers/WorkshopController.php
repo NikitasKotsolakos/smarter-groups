@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\GroupPreferences;
 use App\Models\Student;
 use App\Models\Workshop;
+use App\Services\AssignmentAlgorithm\AssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -421,30 +422,47 @@ class WorkshopController extends Controller
                 ->whereIn('group_id', $workshop->groups()->pluck('id'))
                 ->delete();
 
-            // Run stub algorithm (round-robin for now)
-            $groups = $workshop->groups()->get();
-            $students = $workshop->students()->get();
+            // Run the assignment algorithm
+            $assignmentService = new AssignmentService();
+            $result = $assignmentService->assignStudentsToGroups($workshop);
 
-            $groupIndex = 0;
-            foreach ($students as $student) {
-                $group = $groups[$groupIndex];
+            // Save assignments to database
+            $now = now();
+            $userId = auth()->id();
 
-                // Attach student to group with metadata
-                $group->students()->attach($student->id, [
+            foreach ($result->assignments as $assignment) {
+                DB::table('groups_students')->insert([
+                    'student_id' => $assignment['student_id'],
+                    'group_id' => $assignment['group_id'],
                     'assignment_method' => 'algorithm',
-                    'assigned_at' => now(),
-                    'assigned_by' => auth()->id(),
+                    'assigned_at' => $now,
+                    'assigned_by' => $userId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
-
-                // Move to next group (round-robin)
-                $groupIndex = ($groupIndex + 1) % $groups->count();
             }
 
             // Update workshop status
             $workshop->update(['assignment_status' => 'generated']);
 
+            // Build success message
+            $assignedCount = $result->getAssignedCount();
+            $unassignedCount = $result->getUnassignedCount();
+            $groupCount = $result->groups->count();
+
+            $message = "Algorithm completed! {$assignedCount} students assigned to {$groupCount} groups.";
+
+            if ($unassignedCount > 0) {
+                $message .= " WARNING: {$unassignedCount} students could not be assigned due to capacity constraints.";
+            }
+
+            // Add warnings to session for display
+            if ($result->hasWarnings()) {
+                session()->flash('assignment_warnings', $result->warnings);
+            }
+
             return redirect(route('workshops.show', $workshop->id) . '#assignments')
-                ->with('success', 'Algorithm completed! ' . $students->count() . ' students assigned to ' . $groups->count() . ' groups.');
+                ->with('success', $message);
         });
     }
 
