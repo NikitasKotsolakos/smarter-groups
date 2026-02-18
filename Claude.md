@@ -44,8 +44,14 @@ Workshop (Event/Session)
   - `name`: Name of the group/project
   - `minimumParticipants`: Minimum number of students required
   - `maximumParticipants`: Maximum number of students allowed
-  - `priorityGroup`: Priority level for filling this group (higher priority = filled first, useful for less popular groups)
+  - `priorityGroup`: Priority level for filling this group (lower number = higher priority, filled first)
+  - `max_students_from_one_classroom`: Maximum students from same classroom (nullable, defaults to maximumParticipants if null)
   - `workshop_id`: Foreign key to Workshop
+- **Methods**:
+  - `getPopularity()`: Returns count of students who selected this group as a preference
+  - `getEffectiveMaxFromClassroom()`: Returns max_students_from_one_classroom or maximumParticipants if null
+  - `getCurrentCount()`: Returns current number of assigned students
+  - `getCapacityStatus()`: Returns 'ok', 'under', or 'over' based on current count vs min/max
 - **Relationships**:
   - Belongs to a Workshop
   - Has many Students (through `groups_students` pivot)
@@ -127,8 +133,9 @@ Workshop (Event/Session)
 - ✓ Preference collection: students can select up to 3 ranked group preferences
 - ✓ CSV import: bulk import groups, classrooms, students, and preferences from CSV file
 - ✓ Assignments tab: view and manage student-group assignments
-- ✓ Assignment algorithm: basic round-robin implementation (stub for MVP)
-- ✓ Manual adjustment interface: dropdown-based editing of student assignments
+- ✓ Assignment algorithm: **full priority-based greedy algorithm with dynamic adjustment**
+- ✓ Manual adjustment interface: dropdown-based editing of student assignments with AJAX updates
+- ✓ Warnings & validation: comprehensive error and warning display for assignment issues
 
 ## Technical Stack
 
@@ -167,6 +174,13 @@ Workshop (Event/Session)
 - `app/Http/Controllers/GroupPreferencesController.php`
 - `app/Http/Controllers/ProfileController.php`
 
+### Services
+- `app/Services/AssignmentAlgorithm/AssignmentService.php` - Main algorithm orchestrator
+- `app/Services/AssignmentAlgorithm/GroupSorter.php` - Group sorting with priority and tie-breaking
+- `app/Services/AssignmentAlgorithm/StudentSorter.php` - Student sorting by preference urgency
+- `app/Services/AssignmentAlgorithm/ConstraintChecker.php` - Validation and constraint checking
+- `app/Services/AssignmentAlgorithm/DTOs/AssignmentResult.php` - Result data transfer object
+
 ### Migrations
 - `database/migrations/2024_09_07_065101_create_workshops_table.php`
 - `database/migrations/2024_09_07_065151_create_groups_table.php`
@@ -175,6 +189,7 @@ Workshop (Event/Session)
 - `database/migrations/2024_09_07_070301_create_group_preferences_table.php`
 - `database/migrations/2024_09_07_092238_create_workshop_classrooms_table.php`
 - `database/migrations/2024_09_07_092507_create_groups_students_table.php`
+- `database/migrations/2026_01_05_072312_add_classroom_mixing_to_groups_table.php`
 
 ## Design Philosophy & Terminology
 
@@ -227,9 +242,11 @@ The Assignments tab allows teachers to run the assignment algorithm and view/edi
    - ✓ Green: Within capacity (between min and max)
    - ⚠ Yellow: Under minimum capacity
    - ✕ Red: Over maximum capacity
-5. **Manual editing**: Dropdown per student to move them between groups
-6. **Warnings section**: Highlights unassigned students and capacity issues
-7. **Re-run capability**: Option to re-run algorithm (clears existing assignments)
+5. **Manual editing**: Dropdown per student to move them between groups (with AJAX updates)
+6. **Warnings section**: Detailed display of errors and warnings:
+   - 🔴 Errors: Unassigned students who couldn't fit in any group
+   - 🟡 Warnings: Groups below minimum capacity
+7. **Re-run capability**: Option to re-run algorithm (clears existing assignments with confirmation)
 8. **Assignment tracking**: Records who assigned students (algorithm vs manual) and when
 
 ### Assignment Status
@@ -238,10 +255,30 @@ Workshops track their assignment state via `assignment_status` field:
 - `generated`: Algorithm has run
 - `manually_edited`: Teacher has manually modified assignments
 
-### Current Algorithm
-- **Implementation**: Basic round-robin distribution (MVP stub)
-- **Behavior**: Evenly distributes students across all groups in order
-- **Future**: Will be replaced with preference-based optimization algorithm
+### Assignment Algorithm
+**Implementation**: Priority-based greedy algorithm with dynamic priority adjustment (based on Java reference implementation)
+
+**Algorithm Details**:
+- **Service Layer**: Located in `app/Services/AssignmentAlgorithm/`
+  - `AssignmentService`: Main orchestrator (equivalent to Java Main.java)
+  - `GroupSorter`: Sorts groups by priority with configurable tie-breaking
+  - `StudentSorter`: Sorts students by preference urgency
+  - `ConstraintChecker`: Validates capacity and classroom mixing constraints
+  - `AssignmentResult` DTO: Clean result handling with warnings
+
+**Algorithm Phases**:
+1. Load and initialize groups with popularity metrics
+2. Sort groups by priority (lower number = higher priority)
+3. Reorder student preferences based on sorted group order
+4. Sort students by preference urgency (fewer preferences = more constrained = higher priority)
+5. Execute assignment loop with constraint checking
+6. Dynamic priority adjustment: when group reaches minimum, priority becomes PHP_INT_MAX - popularity (pushes to end but keeps popular ones relatively higher)
+
+**Constraints**:
+- Hard constraints: Maximum capacity per group
+- Soft constraints: Classroom mixing limits (`max_students_from_one_classroom` field, nullable)
+
+**Documentation**: See `/home/nikitas/programming/java/project-group-splitter-java/docs/ALGORITHM_IMPLEMENTATION.md` for detailed algorithm explanation
 
 ### Database Schema
 - **Pivot table**: `groups_students` stores final assignments
