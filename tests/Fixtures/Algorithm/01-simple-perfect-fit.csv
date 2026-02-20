@@ -1,0 +1,16 @@
+Classroom;Student;Group A;Group B;Group C
+Class 1;Alice;1;1;
+Class 1;Bob;;1;1
+Class 1;Charlie;1;;1
+Class 1;Diana;1;1;
+Class 1;Eve;;1;1
+Class 2;Frank;1;;1
+Class 2;Grace;1;1;
+Class 2;Henry;;1;1
+Class 2;Ivy;1;;1
+Class 2;Jack;1;1;
+Class 3;Kate;;1;1
+Class 3;Liam;1;;1
+Class 3;Mia;1;1;
+Class 3;Noah;;1;1
+Class 3;Olivia;1;;1
