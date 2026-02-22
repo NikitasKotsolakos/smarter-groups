@@ -30,7 +30,7 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
     ]);
 
     // Load and parse CSV
-    $csvPath = base_path("tests/Fixtures/Algorithm/{$fixtureName}.csv");
+    $csvPath = base_path("tests/Feature/Assignment/Fixtures/{$fixtureName}.csv");
 
     if (!file_exists($csvPath)) {
         throw new \RuntimeException("Fixture not found: {$csvPath}");
@@ -321,7 +321,7 @@ test('all test fixtures are present', function () {
     ];
 
     foreach ($fixtures as $fixture) {
-        $path = base_path("tests/Fixtures/Algorithm/{$fixture}");
+        $path = base_path("tests/Feature/Assignment/Fixtures/{$fixture}");
         expect(file_exists($path))->toBeTrue("Fixture missing: {$fixture}");
     }
 })->group('algorithm');
