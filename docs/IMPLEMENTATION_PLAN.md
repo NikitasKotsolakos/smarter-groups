@@ -78,6 +78,20 @@
   - ✓ Routes: POST /run-algorithm, PUT /students/{id}/assignment
   - ✓ Controller methods in WorkshopController
 
+- **Export Functionality** (Complete):
+  - ✓ Export assignments to CSV with locale-aware delimiters
+    - Semicolon (;) for European locales (de, fr, es, it, pt, nl, pl, cs, el, hu, ro, sv, da, no, fi)
+    - Comma (,) for English/US locales
+  - ✓ Export assignments to Excel (XLSX and XLS formats)
+  - ✓ Assignments sorted by Group, then Classroom, then Student Name
+  - ✓ Empty rows between different groups for readability
+  - ✓ Bold column headers in Excel exports
+  - ✓ Timestamped filenames with slugified workshop names
+  - ✓ Export buttons on Assignments tab (separate buttons for CSV and Excel)
+  - ✓ Uses laravel-excel (maatwebsite/excel) package
+  - ✓ Custom export class (AssignmentsExport) with styling support
+  - ✓ Route: GET /workshops/{workshop}/export-assignments?format=csv|xlsx|xls
+
 ### Not Yet Implemented ✗
 
 #### Core Features (Critical)
@@ -89,7 +103,8 @@
   - Constraint satisfaction optimization
 
 #### User Interface & Workflows
-- Export/reporting features (PDF, CSV export of assignments)
+- Delete operations for workshops, groups, classrooms, and students
+- Basic validation improvements (prevent min > max on groups, better error messages)
 
 #### Business Logic
 - Most business logic beyond basic CRUD
