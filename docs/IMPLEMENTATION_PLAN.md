@@ -1,7 +1,7 @@
 # Group Splitter - Implementation Plan
 
-> **Status**: MVP Development - Assignments Feature Complete
-> **Last Updated**: 2026-01-05
+> **Status**: MVP Development - Delete Operations Complete
+> **Last Updated**: 2026-01-06
 > **Related**: See [Claude.md](../Claude.md) for domain model and project overview
 
 ## Current Implementation Status
@@ -92,6 +92,24 @@
   - ✓ Custom export class (AssignmentsExport) with styling support
   - ✓ Route: GET /workshops/{workshop}/export-assignments?format=csv|xlsx|xls
 
+- **Delete Operations** (Complete):
+  - ✓ Workshop deletion with cascade (deletes all groups, classrooms, students, preferences, assignments)
+  - ✓ Group deletion (removes group and unassigns students)
+  - ✓ Classroom deletion (removes classroom and all its students)
+  - ✓ Student deletion (removes student, preferences, and assignments)
+  - ✓ Clear all assignments (removes student-group assignments without deleting entities)
+  - ✓ Modal confirmations for all delete operations
+  - ✓ Warning messages showing what will be deleted (with counts)
+  - ✓ Authorization checks (users can only delete their own workshop data)
+  - ✓ Inline delete buttons in tables (groups, classrooms, students)
+  - ✓ Workshop delete section at bottom of edit page
+  - ✓ Success messages with deletion statistics
+  - ✓ Tab preservation after deletion (redirects to correct tab)
+  - ✓ Database cascades handle related record cleanup automatically
+  - ✓ Routes: DELETE /workshops/{workshop}, DELETE /workshops/{workshop}/groups/{group},
+    DELETE /workshops/{workshop}/students/{student}, DELETE /workshops/{workshop}/classrooms/{classroom},
+    DELETE /workshops/{workshop}/clear-assignments
+
 ### Not Yet Implemented ✗
 
 #### Core Features (Critical)
@@ -103,7 +121,6 @@
   - Constraint satisfaction optimization
 
 #### User Interface & Workflows
-- Delete operations for workshops, groups, classrooms, and students
 - Basic validation improvements (prevent min > max on groups, better error messages)
 
 #### Business Logic
