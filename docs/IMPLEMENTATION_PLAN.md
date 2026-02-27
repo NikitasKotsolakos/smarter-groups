@@ -57,9 +57,12 @@
 - **CSV Import** (Complete):
   - ✓ Bulk import groups, classrooms, students, and preferences from CSV file
   - ✓ Semicolon-separated format matching Java reference implementation
+  - ✓ **Data replacement**: Deletes all existing workshop data before import
+  - ✓ Confirmation dialog warns users about data deletion with counts
   - ✓ Auto-creates groups with default capacity settings
   - ✓ Assigns students to classrooms and creates ranked preferences
-  - ✓ Transaction-safe with file cleanup
+  - ✓ Transaction-safe with automatic rollback on error
+  - ✓ File cleanup after processing
   - ✓ Available via "Import from CSV" button on workshop page
 
 - **Assignments Feature** (Complete for MVP):

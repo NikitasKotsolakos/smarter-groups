@@ -216,19 +216,25 @@ The system supports bulk importing of workshop data via CSV files. This feature 
   - Multiple "1"s per row are ranked in order (1st choice, 2nd choice, 3rd choice)
 
 ### Import Behavior
-1. **Groups**: Created from header row (columns 2+) with default values:
+1. **Data Replacement**: Deletes ALL existing workshop data before importing:
+   - All groups (and their preferences/assignments)
+   - All classrooms (and their students, preferences, assignments)
+   - Resets workshop assignment status to 'none'
+   - **Warning**: Confirmation dialog shows counts of data that will be deleted
+2. **Groups**: Created from header row (columns 2+) with default values:
    - Minimum participants: 8
    - Maximum participants: 15
    - Priority: 1
-2. **Classrooms**: Created from unique values in column 0
-3. **Students**: Created from column 1, assigned to classroom from column 0
-4. **Preferences**: Created for each "1" in student's row, ranked by column order
-5. **File handling**: Uploaded file is deleted immediately after processing
-6. **Transaction safety**: All operations wrapped in database transaction
+3. **Classrooms**: Created from unique values in column 0
+4. **Students**: Created from column 1, assigned to classroom from column 0
+5. **Preferences**: Created for each "1" in student's row, ranked by column order
+6. **File handling**: Uploaded file is deleted immediately after processing
+7. **Transaction safety**: All operations wrapped in database transaction (rollback on error)
 
 ### Access
 - Available on workshop show/edit page via "Import from CSV" button
-- Auto-submits on file selection for smooth UX
+- Auto-submits on file selection with confirmation dialog
+- Shows warning if workshop has existing data
 - Provides success/error feedback to user
 
 ## Assignments Feature
