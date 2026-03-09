@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "wsl.exe",
+            "args": [
+                "/home/nikitas/.config/herd-lite/bin/php",
+                "/home/nikitas/programming/laravel/group-splitter/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
