@@ -131,6 +131,23 @@ class ClassroomController extends Controller
      */
     public function destroy(Classroom $classroom)
     {
-        //
+        // Get workshop for authorization and redirect
+        $workshop = $classroom->workshop;
+
+        // Authorization check
+        if ($workshop->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Count students that will be deleted
+        $studentCount = $classroom->students()->count();
+        $classroomName = $classroom->name;
+
+        // Delete classroom (cascades to students, preferences, assignments)
+        $classroom->delete();
+
+        // Redirect back to classrooms tab
+        return redirect(route('workshops.show', $workshop->id) . '#classrooms')
+            ->with('success', "Classroom '{$classroomName}' and {$studentCount} students deleted successfully.");
     }
 }

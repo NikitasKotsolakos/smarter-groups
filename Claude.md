@@ -32,6 +32,7 @@ Workshop (Event/Session)
 - **Attributes**:
   - `name`: Name of the workshop
   - `user_id`: Foreign key to User (who created the workshop)
+  - `assignment_status`: Enum ('none', 'generated', 'manually_edited') tracking assignment state
 - **Relationships**:
   - Belongs to User (creator/owner)
   - Has many Groups
@@ -43,8 +44,14 @@ Workshop (Event/Session)
   - `name`: Name of the group/project
   - `minimumParticipants`: Minimum number of students required
   - `maximumParticipants`: Maximum number of students allowed
-  - `priorityGroup`: Priority level for filling this group (higher priority = filled first, useful for less popular groups)
+  - `priorityGroup`: Priority level for filling this group (lower number = higher priority, filled first)
+  - `max_students_from_one_classroom`: Maximum students from same classroom (nullable, defaults to maximumParticipants if null)
   - `workshop_id`: Foreign key to Workshop
+- **Methods**:
+  - `getPopularity()`: Returns count of students who selected this group as a preference
+  - `getEffectiveMaxFromClassroom()`: Returns max_students_from_one_classroom or maximumParticipants if null
+  - `getCurrentCount()`: Returns current number of assigned students
+  - `getCapacityStatus()`: Returns 'ok', 'under', or 'over' based on current count vs min/max
 - **Relationships**:
   - Belongs to a Workshop
   - Has many Students (through `groups_students` pivot)
@@ -110,6 +117,7 @@ Workshop (Event/Session)
 ### Key Relationships (Pivot Tables)
 - **workshop_classrooms**: Many-to-many between Workshops and Classrooms
 - **groups_students**: Many-to-many between Groups and Students (final assignments)
+  - Includes metadata: `assignment_method` (algorithm/manual), `assigned_at`, `assigned_by`
 
 ## Current Implementation Status
 
@@ -118,14 +126,18 @@ Workshop (Event/Session)
 ### Quick Status Summary
 - ✓ Basic Laravel setup complete with authentication
 - ✓ Database models and migrations in place
-- ✓ Workshop management: create, list, view, edit (user-scoped)
-- ✓ Group management: create, edit within workshops (tab-based UI)
-- ✓ Classroom management: create, edit within workshops (tab-based UI)
-- ✓ Student management: create, edit with classroom assignment (tab-based UI)
+- ✓ Workshop management: create, list, view, edit, delete (user-scoped)
+- ✓ Group management: create, edit, delete within workshops (tab-based UI)
+- ✓ Classroom management: create, edit, delete within workshops (tab-based UI)
+- ✓ Student management: create, edit, delete with classroom assignment (tab-based UI)
 - ✓ Preference collection: students can select up to 3 ranked group preferences
 - ✓ CSV import: bulk import groups, classrooms, students, and preferences from CSV file
-- ✗ Assignment algorithm (core feature) - not yet implemented
-- ✗ Manual adjustment interface - not yet implemented
+- ✓ Assignments tab: view and manage student-group assignments
+- ✓ Assignment algorithm: **full priority-based greedy algorithm with dynamic adjustment**
+- ✓ Manual adjustment interface: dropdown-based editing of student assignments with AJAX updates
+- ✓ Delete operations: workshops, groups, classrooms, students with modal confirmations and cascade cleanup
+- ✓ Clear assignments: remove all student-group assignments without deleting entities
+- ✓ Warnings & validation: comprehensive error and warning display for assignment issues
 
 ## Technical Stack
 
@@ -164,6 +176,13 @@ Workshop (Event/Session)
 - `app/Http/Controllers/GroupPreferencesController.php`
 - `app/Http/Controllers/ProfileController.php`
 
+### Services
+- `app/Services/AssignmentAlgorithm/AssignmentService.php` - Main algorithm orchestrator
+- `app/Services/AssignmentAlgorithm/GroupSorter.php` - Group sorting with priority and tie-breaking
+- `app/Services/AssignmentAlgorithm/StudentSorter.php` - Student sorting by preference urgency
+- `app/Services/AssignmentAlgorithm/ConstraintChecker.php` - Validation and constraint checking
+- `app/Services/AssignmentAlgorithm/DTOs/AssignmentResult.php` - Result data transfer object
+
 ### Migrations
 - `database/migrations/2024_09_07_065101_create_workshops_table.php`
 - `database/migrations/2024_09_07_065151_create_groups_table.php`
@@ -172,6 +191,7 @@ Workshop (Event/Session)
 - `database/migrations/2024_09_07_070301_create_group_preferences_table.php`
 - `database/migrations/2024_09_07_092238_create_workshop_classrooms_table.php`
 - `database/migrations/2024_09_07_092507_create_groups_students_table.php`
+- `database/migrations/2026_01_05_072312_add_classroom_mixing_to_groups_table.php`
 
 ## Design Philosophy & Terminology
 
@@ -196,20 +216,173 @@ The system supports bulk importing of workshop data via CSV files. This feature 
   - Multiple "1"s per row are ranked in order (1st choice, 2nd choice, 3rd choice)
 
 ### Import Behavior
-1. **Groups**: Created from header row (columns 2+) with default values:
+1. **Data Replacement**: Deletes ALL existing workshop data before importing:
+   - All groups (and their preferences/assignments)
+   - All classrooms (and their students, preferences, assignments)
+   - Resets workshop assignment status to 'none'
+   - **Warning**: Confirmation dialog shows counts of data that will be deleted
+2. **Groups**: Created from header row (columns 2+) with default values:
    - Minimum participants: 8
    - Maximum participants: 15
    - Priority: 1
-2. **Classrooms**: Created from unique values in column 0
-3. **Students**: Created from column 1, assigned to classroom from column 0
-4. **Preferences**: Created for each "1" in student's row, ranked by column order
-5. **File handling**: Uploaded file is deleted immediately after processing
-6. **Transaction safety**: All operations wrapped in database transaction
+3. **Classrooms**: Created from unique values in column 0
+4. **Students**: Created from column 1, assigned to classroom from column 0
+5. **Preferences**: Created for each "1" in student's row, ranked by column order
+6. **File handling**: Uploaded file is deleted immediately after processing
+7. **Transaction safety**: All operations wrapped in database transaction (rollback on error)
 
 ### Access
 - Available on workshop show/edit page via "Import from CSV" button
-- Auto-submits on file selection for smooth UX
+- Auto-submits on file selection with confirmation dialog
+- Shows warning if workshop has existing data
 - Provides success/error feedback to user
+
+## Assignments Feature
+
+### Overview
+The Assignments tab allows teachers to run the assignment algorithm and view/edit the results. This is the core feature where students are assigned to groups based on their preferences and constraints.
+
+### Features
+1. **Always-visible tab**: The Assignments tab is always present in the workshop view
+2. **Empty state**: Shows helpful message and "Run Algorithm" button when no assignments exist
+3. **Algorithm execution**: One-click algorithm run that distributes students across groups
+4. **Visual feedback**: Color-coded capacity indicators for each group:
+   - ✓ Green: Within capacity (between min and max)
+   - ⚠ Yellow: Under minimum capacity
+   - ✕ Red: Over maximum capacity
+5. **Manual editing**: Dropdown per student to move them between groups (with AJAX updates)
+6. **Warnings section**: Detailed display of errors and warnings:
+   - 🔴 Errors: Unassigned students who couldn't fit in any group
+   - 🟡 Warnings: Groups below minimum capacity
+7. **Re-run capability**: Option to re-run algorithm (clears existing assignments with confirmation)
+8. **Assignment tracking**: Records who assigned students (algorithm vs manual) and when
+
+### Assignment Status
+Workshops track their assignment state via `assignment_status` field:
+- `none`: No assignments have been made
+- `generated`: Algorithm has run
+- `manually_edited`: Teacher has manually modified assignments
+
+### Assignment Algorithm
+**Implementation**: Priority-based greedy algorithm with dynamic priority adjustment (based on Java reference implementation)
+
+**Algorithm Details**:
+- **Service Layer**: Located in `app/Services/AssignmentAlgorithm/`
+  - `AssignmentService`: Main orchestrator (equivalent to Java Main.java)
+  - `GroupSorter`: Sorts groups by priority with configurable tie-breaking
+  - `StudentSorter`: Sorts students by preference urgency
+  - `ConstraintChecker`: Validates capacity and classroom mixing constraints
+  - `AssignmentResult` DTO: Clean result handling with warnings
+
+**Algorithm Phases**:
+1. Load and initialize groups with popularity metrics
+2. Sort groups by priority (lower number = higher priority)
+3. Reorder student preferences based on sorted group order
+4. Sort students by preference urgency (fewer preferences = more constrained = higher priority)
+5. Execute assignment loop with constraint checking
+6. Dynamic priority adjustment: when group reaches minimum, priority becomes PHP_INT_MAX - popularity (pushes to end but keeps popular ones relatively higher)
+
+**Constraints**:
+- Hard constraints: Maximum capacity per group
+- Soft constraints: Classroom mixing limits (`max_students_from_one_classroom` field, nullable)
+
+**Documentation**: See `/home/nikitas/programming/java/project-group-splitter-java/docs/ALGORITHM_IMPLEMENTATION.md` for detailed algorithm explanation
+
+### Database Schema
+- **Pivot table**: `groups_students` stores final assignments
+- **Metadata fields**:
+  - `assignment_method`: 'algorithm' or 'manual'
+  - `assigned_at`: Timestamp of assignment
+  - `assigned_by`: User ID who made the assignment
+
+### Access
+- Available as "Assignments" tab in workshop show/edit page
+- Visible to all workshops regardless of assignment status
+- Separate from the main workshop edit form
+
+## Delete Operations
+
+### Overview
+The system provides comprehensive delete functionality for all major entities with safety measures to prevent accidental data loss.
+
+### Features
+
+**Workshop Deletion**:
+- Delete button located at the bottom of workshop edit page (below main form, hidden on Assignments tab)
+- Deletes workshop and all related data via database cascade:
+  - All groups
+  - All classrooms
+  - All students
+  - All group preferences
+  - All assignments
+- Modal confirmation showing counts of what will be deleted
+- Success message displays deletion statistics
+- Redirects to workshop index after deletion
+
+**Group Deletion**:
+- Inline "Delete" button in each group row (Groups tab)
+- Removes group and unassigns all students from it
+- Deletes all preferences for that group
+- Modal shows count of students that will be unassigned
+- Redirects to Groups tab after deletion
+
+**Classroom Deletion**:
+- Inline "Delete" button in each classroom row (Classrooms tab)
+- Cascades to delete all students in the classroom
+- Deletes student preferences and assignments
+- Modal shows count of students that will be deleted
+- Strong warning about data loss
+- Redirects to Classrooms tab after deletion
+
+**Student Deletion**:
+- Inline "Delete" button in each student row (Students tab)
+- Removes student, their preferences, and assignments
+- Modal confirmation for each student
+- Redirects to Students tab after deletion
+
+**Clear All Assignments**:
+- Red button in Assignments tab action bar
+- Removes all student-group assignments without deleting students or groups
+- Updates workshop status to 'none'
+- Modal confirmation explaining that students/groups remain
+- Redirects to Assignments tab after clearing
+- Useful for re-running algorithm or starting fresh
+
+### Safety Measures
+
+1. **Modal Confirmations**: Every delete operation requires confirmation
+2. **Warning Messages**: Modals show exactly what will be deleted with counts
+3. **Authorization**: Users can only delete their own workshop data
+4. **Cascade Information**: Clear messaging about related data that will be removed
+5. **Success Feedback**: Deletion statistics shown after successful operation
+6. **Tab Preservation**: Redirects return to the appropriate tab with hash fragment
+
+### Database Behavior
+
+All foreign key constraints use `cascadeOnDelete()`, ensuring:
+- No orphaned records
+- Automatic cleanup of related data
+- Database integrity maintained
+- No manual cascade logic needed in controllers
+
+### Routes
+
+```php
+DELETE /workshops/{workshop}                        // Delete workshop
+DELETE /workshops/{workshop}/groups/{group}         // Delete group
+DELETE /workshops/{workshop}/classrooms/{classroom} // Delete classroom
+DELETE /workshops/{workshop}/students/{student}     // Delete student
+DELETE /workshops/{workshop}/clear-assignments      // Clear assignments
+```
+
+### Controllers
+
+- **WorkshopController**: `destroy()`, `clearAssignments()`
+- **GroupController**: `destroy()`
+- **ClassroomController**: `destroy()`
+- **StudentController**: `destroy()`
+
+All controllers perform authorization checks and gather deletion statistics before removing data.
 
 ## Development Setup
 
@@ -236,21 +409,46 @@ php artisan migrate:fresh
 php artisan db:seed
 ```
 
-### Testing & Demo Credentials
+### Testing
+
+**Algorithm Tests**:
+```bash
+# Run all algorithm tests
+php artisan test --group=algorithm
+
+# Run a specific test
+php artisan test --filter="simple perfect fit"
+
+# Run with verbose output
+php artisan test --group=algorithm --verbose
+
+# Run all tests
+php artisan test
+```
+
+**Test Fixtures**:
+- Location: `tests/Feature/Assignment/Fixtures/`
+- 6 CSV test scenarios covering: perfect fit, priority ordering, preference satisfaction, capacity constraints, classroom mixing, and dynamic priority
+- Each test validates specific algorithm behaviors
+- See `tests/Feature/Assignment/Fixtures/README.md` for detailed test case documentation
+
+### Demo Credentials
 **Default Admin User** (created by seeder):
 - Email: `admin@admin.com`
 - Password: `admin123`
 
 **Sample Data** (created by seeder):
 - 2 workshops with groups, classrooms, students, and preferences pre-populated for testing
-- **Workshop 1: "Spring Project Workshop"**
+- **Workshop 1: "Spring Project Workshop"** *(includes seeded assignments)*
   - 4 groups: Robotics, Art & Design, Music Production, Coding & Tech
   - 3 classrooms: 5A (15 students), 5B (16 students), 5C (14 students)
   - Total: 45 students with randomized group preferences
-- **Workshop 2: "Summer Activities 2026"**
+  - **Pre-assigned**: All students distributed across groups (round-robin) with `assignment_status = 'generated'`
+- **Workshop 2: "Summer Activities 2026"** *(no assignments - for testing empty state)*
   - 3 groups: Sports & Athletics, Drama & Theater, Science Lab
   - 2 classrooms: 6A (12 students), 6B (13 students)
   - Total: 25 students with randomized group preferences
+  - **No assignments**: Use this to test the "Run Algorithm" feature
 - Students have 1-3 ranked preferences each (randomized for testing)
 
 **Testing Workflow**:

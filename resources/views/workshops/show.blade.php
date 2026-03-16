@@ -1,5 +1,11 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" x-data="{ activeTab: 'groups' }">
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" x-data="{
+        activeTab: window.location.hash ? window.location.hash.substring(1) : 'groups',
+        setTab(tab) {
+            this.activeTab = tab;
+            window.location.hash = tab;
+        }
+    }">
         @if(session('success'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                 {{ session('success') }}
@@ -15,14 +21,52 @@
         @endif
 
         <!-- CSV Import Form (separate form) -->
-        <form method="POST" action="{{ route('workshops.import', $workshop->id) }}" enctype="multipart/form-data" class="mb-4">
+        <form method="POST" action="{{ route('workshops.import', $workshop->id) }}" enctype="multipart/form-data" class="mb-4" onsubmit="return confirmImport(event)">
             @csrf
             <label class="btn bg-blue-500 hover:bg-blue-600 text-white cursor-pointer inline-block">
-                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
+                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="handleFileSelect(this)">
                 📁 Import from CSV
             </label>
-            <span class="text-gray-600 text-sm ml-2">Upload CSV with students & preferences</span>
+            <span class="text-gray-600 text-sm ml-2">Upload CSV with students & preferences (will replace all existing data)</span>
         </form>
+
+        <script>
+            let selectedFile = null;
+
+            function handleFileSelect(input) {
+                selectedFile = input.files[0];
+                if (selectedFile) {
+                    input.form.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            }
+
+            function confirmImport(event) {
+                if (!selectedFile) {
+                    event.preventDefault();
+                    return false;
+                }
+
+                const hasData = {{ ($workshop->groups->count() > 0 || $workshop->classrooms->count() > 0 || $workshop->students->count() > 0) ? 'true' : 'false' }};
+
+                if (hasData) {
+                    const message = 'WARNING: This will DELETE all existing data in this workshop:\n\n' +
+                                  '• {{ $workshop->groups->count() }} groups\n' +
+                                  '• {{ $workshop->classrooms->count() }} classrooms\n' +
+                                  '• {{ $workshop->students->count() }} students\n' +
+                                  '• All group preferences and assignments\n\n' +
+                                  'This action cannot be undone. Continue with import?';
+
+                    if (!confirm(message)) {
+                        event.preventDefault();
+                        selectedFile = null;
+                        event.target.reset();
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        </script>
 
         <form autocomplete="off" method="POST" action="{{ route("workshops.update", $workshop->id) }}" enctype="multipart/form-data">
             @csrf
@@ -39,20 +83,25 @@
             <!-- Tab Headers -->
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-8">
-                    <button type="button" @click="activeTab = 'groups'"
+                    <button type="button" @click="setTab('groups')"
                             :class="activeTab === 'groups' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Groups ({{ $workshop->groups->count() }})
                     </button>
-                    <button type="button" @click="activeTab = 'classrooms'"
+                    <button type="button" @click="setTab('classrooms')"
                             :class="activeTab === 'classrooms' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Classrooms ({{ $workshop->classrooms->count() }})
                     </button>
-                    <button type="button" @click="activeTab = 'students'"
+                    <button type="button" @click="setTab('students')"
                             :class="activeTab === 'students' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         Students ({{ $workshop->students->count() }})
+                    </button>
+                    <button type="button" @click="setTab('assignments')"
+                            :class="activeTab === 'assignments' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Assignments
                     </button>
                 </nav>
             </div>
@@ -68,6 +117,7 @@
                             <th>Minimum Participants</th>
                             <th>Maximum Participants</th>
                             <th>Priority Group</th>
+                            <th class="w-32">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -98,6 +148,14 @@
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </td>
+                                <td class="w-32 text-center">
+                                    <button type="button"
+                                            x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'confirm-group-deletion-{{ $group->id }}')"
+                                            class="text-red-600 hover:text-red-900 text-sm font-medium">
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                         <!-- Add new group rows -->
@@ -127,10 +185,41 @@
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </td>
+                                <td><!-- No delete for new rows --></td>
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
+
+                    {{-- Delete modals for groups --}}
+                    @foreach ($workshop->groups as $group)
+                        <x-modal name="confirm-group-deletion-{{ $group->id }}" focusable>
+                            <form method="post" action="{{ route('workshops.groups.destroy', [$workshop->id, $group->id]) }}" class="p-6">
+                                @csrf
+                                @method('delete')
+
+                                <h2 class="text-lg font-medium text-gray-900">
+                                    Delete group "{{ $group->name }}"?
+                                </h2>
+
+                                <p class="mt-3 text-sm text-gray-600">
+                                    This will remove the group and unassign
+                                    <strong>{{ $group->students()->count() }}</strong> student(s).
+                                    Their preferences for this group will also be deleted.
+                                </p>
+
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                                        Cancel
+                                    </x-secondary-button>
+
+                                    <x-danger-button>
+                                        Delete Group
+                                    </x-danger-button>
+                                </div>
+                            </form>
+                        </x-modal>
+                    @endforeach
                 </div>
 
                 <!-- Classrooms Tab -->
@@ -152,8 +241,13 @@
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </td>
-                                <td class="w-32">
-                                    <!-- Placeholder for future delete button -->
+                                <td class="w-32 text-center">
+                                    <button type="button"
+                                            x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'confirm-classroom-deletion-{{ $classroom->id }}')"
+                                            class="text-red-600 hover:text-red-900 text-sm font-medium">
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -167,12 +261,45 @@
                                     @enderror
                                 </td>
                                 <td>
-                                    <!-- Placeholder -->
+                                    <!-- No delete for new rows -->
                                 </td>
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
+
+                    {{-- Delete modals for classrooms --}}
+                    @foreach ($workshop->classrooms as $classroom)
+                        <x-modal name="confirm-classroom-deletion-{{ $classroom->id }}" focusable>
+                            <form method="post" action="{{ route('workshops.classrooms.destroy', [$workshop->id, $classroom->id]) }}" class="p-6">
+                                @csrf
+                                @method('delete')
+
+                                <h2 class="text-lg font-medium text-gray-900">
+                                    Delete classroom "{{ $classroom->name }}"?
+                                </h2>
+
+                                <p class="mt-3 text-sm text-gray-600">
+                                    This will permanently delete the classroom and all
+                                    <strong>{{ $classroom->students()->count() }}</strong> student(s) in it.
+                                </p>
+
+                                <p class="mt-2 text-sm text-red-600 font-medium">
+                                    All student data, preferences, and assignments will be lost.
+                                </p>
+
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                                        Cancel
+                                    </x-secondary-button>
+
+                                    <x-danger-button>
+                                        Delete Classroom & Students
+                                    </x-danger-button>
+                                </div>
+                            </form>
+                        </x-modal>
+                    @endforeach
                 </div>
 
                 <!-- Students Tab -->
@@ -185,6 +312,7 @@
                             <th>1st Choice</th>
                             <th>2nd Choice</th>
                             <th>3rd Choice</th>
+                            <th class="w-32">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -252,6 +380,14 @@
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </td>
+                                <td class="w-32 text-center">
+                                    <button type="button"
+                                            x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'confirm-student-deletion-{{ $student->id }}')"
+                                            class="text-red-600 hover:text-red-900 text-sm font-medium">
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                         <!-- Add new student rows -->
@@ -315,18 +451,110 @@
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </td>
+                                <td><!-- No delete for new rows --></td>
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
+
+                    {{-- Delete modals for students --}}
+                    @foreach ($workshop->students as $student)
+                        <x-modal name="confirm-student-deletion-{{ $student->id }}" focusable>
+                            <form method="post" action="{{ route('workshops.students.destroy', [$workshop->id, $student->id]) }}" class="p-6">
+                                @csrf
+                                @method('delete')
+
+                                <h2 class="text-lg font-medium text-gray-900">
+                                    Delete student "{{ $student->name }}"?
+                                </h2>
+
+                                <p class="mt-3 text-sm text-gray-600">
+                                    This will permanently delete the student and all their preferences and group assignments.
+                                </p>
+
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                                        Cancel
+                                    </x-secondary-button>
+
+                                    <x-danger-button>
+                                        Delete Student
+                                    </x-danger-button>
+                                </div>
+                            </form>
+                        </x-modal>
+                    @endforeach
                 </div>
+
             </div>
 
-            <div class="form-group mt-6">
+            <div class="form-group mt-6" x-show="activeTab !== 'assignments'" x-cloak>
                 <button class="btn btn-danger" type="submit">
                     Update Workshop
                 </button>
             </div>
         </form>
+
+        {{-- Delete Workshop Section --}}
+        <div class="mt-8 pt-6 border-t border-gray-200" x-show="activeTab !== 'assignments'" x-cloak>
+            <section class="space-y-4">
+                <header>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Workshop</h3>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Permanently delete this workshop and all its data. This action cannot be undone.
+                    </p>
+                </header>
+
+                <x-danger-button
+                    x-data=""
+                    x-on:click.prevent="$dispatch('open-modal', 'confirm-workshop-deletion')"
+                >Delete Workshop</x-danger-button>
+            </section>
+        </div>
+
+        {{-- Delete Workshop Modal --}}
+        <x-modal name="confirm-workshop-deletion" focusable>
+            <form method="post" action="{{ route('workshops.destroy', $workshop->id) }}" class="p-6">
+                @csrf
+                @method('delete')
+
+                <h2 class="text-lg font-medium text-gray-900">
+                    Are you sure you want to delete this workshop?
+                </h2>
+
+                <p class="mt-3 text-sm text-gray-600">
+                    This will permanently delete:
+                </p>
+                <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
+                    <li><strong>{{ $workshop->groups->count() }}</strong> groups</li>
+                    <li><strong>{{ $workshop->classrooms->count() }}</strong> classrooms</li>
+                    <li><strong>{{ $workshop->students->count() }}</strong> students</li>
+                    <li>All group preferences and assignments</li>
+                </ul>
+
+                <p class="mt-4 text-sm text-red-600 font-medium">
+                    This action cannot be undone.
+                </p>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <x-secondary-button type="button" x-on:click="$dispatch('close')">
+                        Cancel
+                    </x-secondary-button>
+
+                    <x-danger-button>
+                        Delete Workshop
+                    </x-danger-button>
+                </div>
+            </form>
+        </x-modal>
+
+        <!-- Assignments Tab (outside main form to avoid nesting) -->
+        <div x-show="activeTab === 'assignments'" x-cloak>
+            @if($workshop->hasAssignments())
+                @include('workshops.partials.assignments-display')
+            @else
+                @include('workshops.partials.assignments-empty-state')
+            @endif
+        </div>
     </div>
 </x-app-layout>
