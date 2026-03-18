@@ -88,11 +88,17 @@ The plan is organized into 7 phases with Phase 1 being critical and blocking use
 
 Fix phantom CSS classes and establish baseline consistency.
 
-### Phase 2: Design System Foundation
+### Phase 2a: Design System Foundation
+**Estimated Time:** 2-3 hours
+**Priority:** P1 (High)
+Think hard first about the style of the application your frontend skill.
+Create a style_guide.md document under the docs folder, to document all of it for the future. 
+
+### Phase 2b: Design System Foundation
 **Estimated Time:** 6-8 hours
 **Priority:** P1 (High)
+Create unified design system with color palette and font standardization, keeping in mind the style_guide.
 
-Create unified design system with color palette and font standardization.
 
 ### Phase 3: Component Library Expansion
 **Estimated Time:** 12-16 hours
