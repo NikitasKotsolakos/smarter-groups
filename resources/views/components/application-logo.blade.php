@@ -18,7 +18,7 @@
     </svg>
     @if($showText)
         <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Group Splitter
+            Smarter Groups
         </span>
     @endif
 </div>
