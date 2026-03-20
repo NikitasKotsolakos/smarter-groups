@@ -10,7 +10,7 @@
             </x-alert>
         @endif
 
-        <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data">
+        <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data" x-data="{ submitting: false }" @submit="submitting = true">
             @csrf
             <div class="mb-6">
                 <x-input-label for="name" :value="__('Workshop Name')" class="required" />
@@ -20,8 +20,12 @@
             </div>
 
             <div class="flex gap-3">
-                <x-primary-button type="submit">
-                    Create Workshop
+                <x-primary-button type="submit" x-bind:disabled="submitting" class="relative">
+                    <span x-show="!submitting">Create Workshop</span>
+                    <span x-show="submitting" class="flex items-center">
+                        <x-loading-spinner size="sm" class="mr-2" />
+                        Creating...
+                    </span>
                 </x-primary-button>
                 <x-button-link href="{{ route('workshops.index') }}" variant="secondary">
                     Cancel

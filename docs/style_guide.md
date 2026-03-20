@@ -932,6 +932,23 @@ x-transition:leave-start="opacity-100 scale-100"
 x-transition:leave-end="opacity-0 scale-95"
 ```
 
+**Tab Content:**
+```blade
+x-transition:enter="transition ease-out duration-200"
+x-transition:enter-start="opacity-0 translate-y-1"
+x-transition:enter-end="opacity-100 translate-y-0"
+```
+
+**Toast Notification:**
+```blade
+x-transition:enter="transition ease-out duration-300"
+x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+x-transition:leave="transition ease-in duration-200"
+x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+```
+
 ### Animation Guidelines
 
 1. **Keep animations subtle** - they should enhance, not distract
@@ -1011,6 +1028,14 @@ Example:
 | Modal | `resources/views/components/modal.blade.php` |
 | Dropdown | `resources/views/components/dropdown.blade.php` |
 | Nav Link | `resources/views/components/nav-link.blade.php` |
+| Alert | `resources/views/components/alert.blade.php` |
+| Badge | `resources/views/components/badge.blade.php` |
+| Card | `resources/views/components/card.blade.php` |
+| Page Header | `resources/views/components/page-header.blade.php` |
+| Checkbox | `resources/views/components/checkbox.blade.php` |
+| Loading Spinner | `resources/views/components/loading-spinner.blade.php` |
+| Toast Container | `resources/views/components/toast-container.blade.php` |
+| Loading Button | `resources/views/components/loading-button.blade.php` |
 
 ### Configuration Files
 
@@ -1030,6 +1055,15 @@ Example:
 ---
 
 ## Changelog
+
+### Version 1.1 (2026-01-11)
+
+- Added loading spinner component with multiple size options
+- Added toast notification system with Alpine.js integration
+- Added loading button component for form submissions
+- Added tab content transition animations
+- Added form input focus transitions
+- Updated component file references
 
 ### Version 1.0 (2026-01-10)
 

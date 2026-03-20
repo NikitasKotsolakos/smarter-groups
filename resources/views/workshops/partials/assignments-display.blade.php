@@ -1,7 +1,5 @@
 {{-- Alpine.js data wrapper for AJAX functionality --}}
 <div x-data="{
-    successMessage: '',
-    errorMessage: '',
     async updateAssignment(studentId, groupId) {
         try {
             const response = await fetch('{{ route('workshops.update-student-assignment', [$workshop->id, ':studentId']) }}'.replace(':studentId', studentId), {
@@ -17,32 +15,23 @@
             const data = await response.json();
 
             if (response.ok) {
-                this.successMessage = data.message || 'Student assignment updated successfully';
-                this.errorMessage = '';
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: { message: data.message || 'Student assignment updated successfully', type: 'success' }
+                }));
                 // Reload page to show updated assignments
                 setTimeout(() => window.location.reload(), 500);
             } else {
-                this.errorMessage = data.message || 'Failed to update assignment';
-                this.successMessage = '';
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: { message: data.message || 'Failed to update assignment', type: 'error' }
+                }));
             }
         } catch (error) {
-            this.errorMessage = 'An error occurred while updating the assignment';
-            this.successMessage = '';
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { message: 'An error occurred while updating the assignment', type: 'error' }
+            }));
         }
     }
 }">
-
-{{-- Success/Error messages --}}
-<template x-if="successMessage">
-    <x-alert type="success" class="mb-4">
-        <span x-text="successMessage"></span>
-    </x-alert>
-</template>
-<template x-if="errorMessage">
-    <x-alert type="error" class="mb-4">
-        <span x-text="errorMessage"></span>
-    </x-alert>
-</template>
 
 {{-- Action bar --}}
 <div class="mb-6 flex justify-between items-center">
@@ -70,10 +59,15 @@
         </a>
 
         <form method="POST" action="{{ route('workshops.run-algorithm', $workshop->id) }}"
-              onsubmit="return confirm('This will clear all current assignments. Are you sure?')">
+              x-data="{ running: false }"
+              @submit="if (!confirm('This will clear all current assignments. Are you sure?')) { $event.preventDefault(); return; } running = true;">
             @csrf
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                Re-run Algorithm
+            <button type="submit" x-bind:disabled="running" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150">
+                <span x-show="!running">Re-run Algorithm</span>
+                <span x-show="running" class="flex items-center">
+                    <x-loading-spinner size="sm" class="mr-2" />
+                    Running...
+                </span>
             </button>
         </form>
 
