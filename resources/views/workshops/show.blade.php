@@ -7,17 +7,17 @@
         }
     }">
         @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <x-alert type="success" dismissible class="mb-4">
                 {{ session('success') }}
-            </div>
+            </x-alert>
         @endif
 
         @if($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <x-alert type="error" class="mb-4">
                 @foreach($errors->all() as $error)
                     <p>{{ $error }}</p>
                 @endforeach
-            </div>
+            </x-alert>
         @endif
 
         <!-- CSV Import Form (separate form) -->

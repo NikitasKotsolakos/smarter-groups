@@ -1,13 +1,13 @@
 <x-app-layout>
     <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-        <h2 class="text-2xl font-semibold mb-6">Create New Workshop</h2>
+        <x-page-header title="Create New Workshop" />
 
         @if($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <x-alert type="error" class="mb-4">
                 @foreach($errors->all() as $error)
                     <p>{{ $error }}</p>
                 @endforeach
-            </div>
+            </x-alert>
         @endif
 
         <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data">

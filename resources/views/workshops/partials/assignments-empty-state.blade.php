@@ -8,16 +8,14 @@
     </p>
 
     @if ($workshop->groups()->count() === 0 || $workshop->students()->count() === 0)
-        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p class="text-sm text-yellow-800">
-                <strong>Cannot run algorithm:</strong>
-                @if ($workshop->groups()->count() === 0)
-                    You need to add at least one group first.
-                @elseif ($workshop->students()->count() === 0)
-                    You need to add at least one student first.
-                @endif
-            </p>
-        </div>
+        <x-alert type="warning" class="mt-4 text-left">
+            <strong>Cannot run algorithm:</strong>
+            @if ($workshop->groups()->count() === 0)
+                You need to add at least one group first.
+            @elseif ($workshop->students()->count() === 0)
+                You need to add at least one student first.
+            @endif
+        </x-alert>
     @else
         <form method="POST" action="{{ route('workshops.run-algorithm', $workshop->id) }}" class="mt-6">
             @csrf
