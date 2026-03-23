@@ -2,6 +2,8 @@
 
 A web application for intelligently assigning students to workshop groups based on their preferences, classroom constraints, and group capacity limits.
 
+http://smarter-groups.com
+
 ## Overview
 
 Smarter Groups helps educators and workshop organizers automatically assign students to groups while respecting:
@@ -164,7 +166,3 @@ The assignment algorithm uses a priority-based greedy approach:
 5. **Dynamic adjustment** - When a group reaches minimum capacity, its priority is lowered to allow other groups to fill
 
 This approach balances filling high-priority groups first while ensuring all groups meet minimum capacity requirements.
-
-## License
-
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
