@@ -1,50 +1,49 @@
 <x-app-layout>
     <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-semibold">My Workshops</h2>
-            <a href="{{ route('workshops.create') }}" class="btn btn-primary">
-                Create New Workshop
-            </a>
-        </div>
+        <x-page-header title="My Workshops">
+            <x-slot name="actions">
+                <x-button-link href="{{ route('workshops.create') }}" variant="primary">
+                    Create New Workshop
+                </x-button-link>
+            </x-slot>
+        </x-page-header>
 
         @if($workshops->isEmpty())
-            <div class="bg-white rounded-lg shadow p-6 text-center">
+            <x-card class="text-center">
                 <p class="text-gray-500 mb-4">You haven't created any workshops yet.</p>
-                <a href="{{ route('workshops.create') }}" class="btn btn-primary">
+                <x-button-link href="{{ route('workshops.create') }}" variant="primary">
                     Create Your First Workshop
-                </a>
-            </div>
+                </x-button-link>
+            </x-card>
         @else
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Workshop Name</th>
-                            <th>Groups</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($workshops as $workshop)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('workshops.show', $workshop->id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                                        {{ $workshop->name }}
-                                    </a>
-                                </td>
-                                <td>{{ $workshop->groups->count() }}</td>
-                                <td>{{ $workshop->created_at->format('M d, Y') }}</td>
-                                <td>
-                                    <a href="{{ route('workshops.show', $workshop->id) }}" class="btn btn-sm btn-primary">
-                                        View/Edit
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <x-table>
+                <x-table-header>
+                    <x-table-row :hover="false">
+                        <x-table-heading>Workshop Name</x-table-heading>
+                        <x-table-heading>Groups</x-table-heading>
+                        <x-table-heading>Created</x-table-heading>
+                        <x-table-heading>Actions</x-table-heading>
+                    </x-table-row>
+                </x-table-header>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($workshops as $workshop)
+                        <x-table-row>
+                            <x-table-data>
+                                <a href="{{ route('workshops.show', $workshop->id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    {{ $workshop->name }}
+                                </a>
+                            </x-table-data>
+                            <x-table-data>{{ $workshop->groups->count() }}</x-table-data>
+                            <x-table-data>{{ $workshop->created_at->format('M d, Y') }}</x-table-data>
+                            <x-table-data>
+                                <x-button-link href="{{ route('workshops.show', $workshop->id) }}" variant="primary" class="!py-1 !text-[11px]">
+                                    View/Edit
+                                </x-button-link>
+                            </x-table-data>
+                        </x-table-row>
+                    @endforeach
+                </tbody>
+            </x-table>
         @endif
     </div>
 </x-app-layout>

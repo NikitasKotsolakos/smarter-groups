@@ -1,6 +1,6 @@
 # Assignment Algorithm - Laravel Implementation Plan
 
-> **Project**: Group Splitter Laravel Application
+> **Project**: Smarter Groups Laravel Application
 > **Based On**: Java implementation at `/home/nikitas/programming/java/project-group-splitter-java`
 > **Created**: 2026-01-05
 > **Status**: Planning Phase

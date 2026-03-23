@@ -1,15 +1,15 @@
 # UX Improvements Implementation Plan
-## Group Splitter Laravel Application
+## Smarter Groups Laravel Application
 
 **Created:** 2026-01-08
-**Status:** Draft - Awaiting Approval
+**Status:** Approved
 **Estimated Effort:** 58-81 hours (Critical Phase 1: 8-12 hours)
 
 ---
 
 ## Executive Summary
 
-This plan addresses critical UX issues identified in the Group Splitter Laravel application, focusing on:
+This plan addresses critical UX issues identified in the Smarter Groups Laravel application, focusing on:
 1. **Critical:** 49 phantom CSS class references causing unstyled elements
 2. **High Priority:** Font inconsistency between welcome page (Inter) and app (Figtree)
 3. **High Priority:** Lack of unified design system and color palette
@@ -85,44 +85,99 @@ The plan is organized into 7 phases with Phase 1 being critical and blocking use
 ### Phase 1: Critical Fixes (MUST DO FIRST)
 **Estimated Time:** 8-12 hours
 **Priority:** P0 (Blocking)
+**Status:** Completed
 
 Fix phantom CSS classes and establish baseline consistency.
 
-### Phase 2: Design System Foundation
+### Phase 2a: Design System Foundation
+**Estimated Time:** 2-3 hours
+**Priority:** P1 (High)
+**Status:** Completed
+Think hard first about the style of the application your frontend skill.
+Create a style_guide.md document under the docs folder, to document all of it for the future. 
+
+### Phase 2b: Design System Foundation
 **Estimated Time:** 6-8 hours
 **Priority:** P1 (High)
+**Status:** Completed
+Create unified design system with color palette and font standardization, keeping in mind the style_guide.
 
-Create unified design system with color palette and font standardization.
 
 ### Phase 3: Component Library Expansion
 **Estimated Time:** 12-16 hours
 **Priority:** P1 (High)
+**Status:** Completed
 
 Build missing components for consistent UI patterns.
+
+**Components Created:**
+- `x-alert` - Alert/notification component with type (success, error, warning, info) and dismissible props
+- `x-badge` - Pill-style badge component with variant and size props
+- `x-card` - Card container component with optional padding
+- `x-page-header` - Page header component with title, description, and actions slot
+- `x-checkbox` - Styled checkbox input with primary color
+
+**Views Updated:**
+- `workshops/index.blade.php` - Uses page-header and card components
+- `workshops/create.blade.php` - Uses page-header and alert components
+- `workshops/show.blade.php` - Uses alert components for success/error messages
+- `workshops/partials/assignments-display.blade.php` - Uses alert and badge components
+- `workshops/partials/assignments-empty-state.blade.php` - Uses alert component for warnings
 
 ### Phase 4: Workshop UI Refactoring
 **Estimated Time:** 10-15 hours
 **Priority:** P2 (Medium)
+**Status:** Completed
 
 Simplify complex workshop views and improve UX.
+
+**Changes Made:**
+- Extracted tab content into partial files:
+  - `resources/views/workshops/partials/groups-tab.blade.php`
+  - `resources/views/workshops/partials/classrooms-tab.blade.php`
+  - `resources/views/workshops/partials/students-tab.blade.php`
+- Reduced inline new item rows from 10 to 3 with "Add 3 More Rows" button using Alpine.js
+- Renamed update buttons to context-specific names ("Update Groups", "Update Classrooms", "Update Students")
+- Moved update buttons to section headers for better visibility without scrolling
+- Relocated Delete Workshop button to workshop header area next to the workshop name
+- Added CSV Import button to workshop header for better organization
+- Improved form layout with consistent spacing and section headings
+- Added ARIA attributes for better accessibility
+- Reduced main show.blade.php from ~560 lines to ~310 lines
 
 ### Phase 5: Accessibility Enhancements
 **Estimated Time:** 8-10 hours
 **Priority:** P2 (Medium)
+**Status:** Postponed
 
 Improve keyboard navigation, ARIA labels, and focus management.
 
 ### Phase 6: Responsive Design Refinement
 **Estimated Time:** 6-8 hours
 **Priority:** P2 (Medium)
+**Status:** Postponed
 
 Optimize mobile experience, especially tables.
 
 ### Phase 7: UX Polish
 **Estimated Time:** 8-12 hours
 **Priority:** P3 (Nice to Have)
+**Status:** Completed
 
 Loading states, micro-interactions, toast notifications.
+
+**Components Created:**
+- `x-loading-spinner` - Animated spinner with multiple size options (xs, sm, md, lg, xl)
+- `x-toast-container` - Toast notification system with Alpine.js, supporting success/error/warning/info types
+- `x-loading-button` - Button wrapper with built-in loading state and spinner
+
+**Features Implemented:**
+- Toast notifications triggered from both server-side flash messages and client-side JavaScript events
+- Loading states on all form submission buttons (Create Workshop, Update Groups/Classrooms/Students, Run Algorithm)
+- Subtle tab content transitions with fade and slide effects
+- Form input focus transitions for text inputs and selects
+- Table row hover transitions
+- AJAX assignment updates now use toast notifications instead of inline alerts
 
 ---
 
@@ -733,7 +788,7 @@ File: `resources/views/components/application-logo.blade.php`
     </div>
     @if(isset($showText) && $showText)
         <span class="ml-3 text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-            Group Splitter
+            Smarter Groups
         </span>
     @endif
 </div>
@@ -928,6 +983,10 @@ Add Alpine.js functionality to dynamically add rows:
 - Add section headings with `<h3>` tags
 - Use grid layout for compact field groups
 
+### 4.4 Improve buttons for update
+- Name the buttons for update as Update Groups etc instead of workshop
+- Move them somewhere nice so that it can be pressed without scrolling
+- Move the delete workshop somewhere it makes more sense if it's visible all the time (near the workshop name? or elsewhere)
 ---
 
 ## Phase 5: Accessibility Enhancements
@@ -1373,6 +1432,19 @@ Establish patterns:
 - Each phase builds on the previous, ensuring stability
 - Component library approach ensures consistency going forward
 - All changes maintain Laravel Breeze patterns and conventions
+
+## Known Issues
+
+### Testing Configuration Cache
+When running tests, always clear the configuration cache first to ensure phpunit.xml environment settings are applied correctly. The `.env` file uses `SESSION_DRIVER=database` while tests require `SESSION_DRIVER=array` (set in phpunit.xml). Cached configuration can cause tests to fail with 419 CSRF errors.
+
+**Solution:** Run `php artisan config:clear` before running tests:
+```bash
+php artisan config:clear && php artisan test --compact
+```
+
+### Assignment Algorithm Bug
+There is a known bug in the assignment algorithm where capacity constraints are not fully respected. Test `04: capacity constraints` expects 15 students to be assigned (3 groups × 5 max each) but only 14 are being assigned. This is a separate issue from the UX improvements and predates this work.
 
 ---
 

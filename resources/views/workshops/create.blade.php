@@ -1,33 +1,35 @@
 <x-app-layout>
     <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-        <h2 class="text-2xl font-semibold mb-6">Create New Workshop</h2>
+        <x-page-header title="Create New Workshop" />
 
         @if($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <x-alert type="error" class="mb-4">
                 @foreach($errors->all() as $error)
                     <p>{{ $error }}</p>
                 @endforeach
-            </div>
+            </x-alert>
         @endif
 
-        <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data">
+        <form autocomplete="off" method="POST" action="{{ route("workshops.store") }}" enctype="multipart/form-data" x-data="{ submitting: false }" @submit="submitting = true">
             @csrf
-            <div class="form-group mb-6">
-                <label class="required" for="name">Workshop Name</label>
-                <input class="form-control @error('name') border-red-500 @enderror" type="text" name="name" value="{{ old('name') }}" required autofocus>
-                @error('name')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                @enderror
+            <div class="mb-6">
+                <x-input-label for="name" :value="__('Workshop Name')" class="required" />
+                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full @error('name') border-red-500 @enderror" :value="old('name')" required autofocus />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 <p class="text-gray-600 text-sm mt-2">You'll be able to add groups, classrooms, and students after creating the workshop.</p>
             </div>
 
-            <div class="form-group flex gap-3">
-                <button class="btn btn-danger" type="submit">
-                    Create Workshop
-                </button>
-                <a href="{{ route('workshops.index') }}" class="btn bg-gray-500 hover:bg-gray-600 text-white">
+            <div class="flex gap-3">
+                <x-primary-button type="submit" x-bind:disabled="submitting" class="relative">
+                    <span x-show="!submitting">Create Workshop</span>
+                    <span x-show="submitting" class="flex items-center">
+                        <x-loading-spinner size="sm" class="mr-2" />
+                        Creating...
+                    </span>
+                </x-primary-button>
+                <x-button-link href="{{ route('workshops.index') }}" variant="secondary">
                     Cancel
-                </a>
+                </x-button-link>
             </div>
         </form>
     </div>
