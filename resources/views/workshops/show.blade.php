@@ -109,7 +109,7 @@
         </script>
 
         {{-- Main Workshop Update Form --}}
-        <form id="workshop-update-form" autocomplete="off" method="POST" action="{{ route('workshops.update', $workshop->id) }}">
+        <form id="workshop-update-form" autocomplete="off" method="POST" action="{{ route('workshops.update', $workshop->id) }}" x-data="{ submitting: false }" @submit="submitting = true">
             @csrf
             @method('PUT')
 
