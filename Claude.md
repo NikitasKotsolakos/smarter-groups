@@ -9,15 +9,13 @@ This project was originally named "Group Splitter" and the repository was called
 
 ---
 
-## Project Overview
+## Documentation
 
 Smarter Groups helps teachers assign students to groups within a workshop based on student preferences and capacity constraints. The output is a "good enough" starting assignment that the teacher refines manually.
 
-For domain model, schema, features (CSV import, assignments tab, exports, deletes), code layout, and tech stack, see **[docs/architecture.md](docs/architecture.md)**.
+You will find documentation under the @docs folder. Specifically about the algorithm, architecture, database initialization, deployment, and style guide. Take those into account when working on relevant tasks.
 
-For the assignment algorithm itself, see **[docs/algorithm.md](docs/algorithm.md)**.
-
-For features that have been discussed but aren't built yet, see **[docs/plans/post-mvp-roadmap.md](docs/plans/post-mvp-roadmap.md)**.
+You will find future plans under @docs/plans . Only discuss about those if specifically instructed by the user, else ignore them.
 
 ## Development Setup
 
@@ -72,17 +70,7 @@ php artisan test
 
 **Sample Data** (created by seeder):
 - 2 workshops with groups, classrooms, students, and preferences pre-populated for testing
-- **Workshop 1: "Spring Project Workshop"** *(includes seeded assignments)*
-  - 4 groups: Robotics, Art & Design, Music Production, Coding & Tech
-  - 3 classrooms: 5A (15 students), 5B (16 students), 5C (14 students)
-  - Total: 45 students with randomized group preferences
-  - **Pre-assigned**: All students distributed across groups (round-robin) with `assignment_status = 'generated'`
-- **Workshop 2: "Summer Activities 2026"** *(no assignments - for testing empty state)*
-  - 3 groups: Sports & Athletics, Drama & Theater, Science Lab
-  - 2 classrooms: 6A (12 students), 6B (13 students)
-  - Total: 25 students with randomized group preferences
-  - **No assignments**: Use this to test the "Run Algorithm" feature
-- Students have 1-3 ranked preferences each (randomized for testing)
+- Students have 1-3 preferences each (randomized for testing)
 
 **Testing Workflow**:
 1. Run `php artisan migrate:fresh --seed` to reset database with sample data
