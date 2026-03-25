@@ -2,9 +2,9 @@
 
 namespace App\Services\AssignmentAlgorithm;
 
-use App\Models\Workshop;
-use App\Models\Student;
 use App\Models\Group;
+use App\Models\Student;
+use App\Models\Workshop;
 use App\Services\AssignmentAlgorithm\DTOs\AssignmentResult;
 use Illuminate\Support\Collection;
 
@@ -17,22 +17,21 @@ use Illuminate\Support\Collection;
 class AssignmentService
 {
     private GroupSorter $groupSorter;
+
     private StudentSorter $studentSorter;
+
     private ConstraintChecker $constraintChecker;
 
     public function __construct()
     {
-        $this->groupSorter = new GroupSorter();
-        $this->studentSorter = new StudentSorter();
-        $this->constraintChecker = new ConstraintChecker();
+        $this->groupSorter = new GroupSorter;
+        $this->studentSorter = new StudentSorter;
+        $this->constraintChecker = new ConstraintChecker;
     }
 
     /**
      * Execute the assignment algorithm for a workshop
      * Equivalent to Java's Main.main() method
-     *
-     * @param Workshop $workshop
-     * @return AssignmentResult
      */
     public function assignStudentsToGroups(Workshop $workshop): AssignmentResult
     {
@@ -92,10 +91,10 @@ class AssignmentService
         return Student::whereHas('classroom', function ($query) use ($workshop) {
             $query->where('workshop_id', $workshop->id);
         })
-        ->with(['groupPreferences' => function ($query) {
-            $query->orderBy('rank')->with('group');
-        }, 'classroom'])
-        ->get();
+            ->with(['groupPreferences' => function ($query) {
+                $query->orderBy('rank')->with('group');
+            }, 'classroom'])
+            ->get();
     }
 
     /**
@@ -139,8 +138,13 @@ class AssignmentService
         foreach ($students as $student) {
             $assigned = false;
 
-            // Try to assign student to their preferences in order (Main.java lines 79-84)
-            foreach ($student->groupPreferences as $preference) {
+            // Iterate preferences in the *current* group priority order, so that
+            // groups deprioritized via adjustGroupPriority() are tried last.
+            $orderedPreferences = $student->groupPreferences->sortBy(
+                fn ($preference) => $groups->firstWhere('id', $preference->group_id)?->priorityGroup ?? PHP_INT_MAX
+            );
+
+            foreach ($orderedPreferences as $preference) {
                 $group = $groups->firstWhere('id', $preference->group_id);
 
                 if ($group && $this->constraintChecker->canAssignStudentToGroup($student, $group)) {
@@ -158,7 +162,7 @@ class AssignmentService
             }
 
             // If student couldn't be assigned to any preference, track as unassigned
-            if (!$assigned) {
+            if (! $assigned) {
                 $unassigned[] = $student;
             }
         }
