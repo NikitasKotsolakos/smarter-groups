@@ -1,138 +1,89 @@
 # Smarter Groups
 
-A web application for intelligently assigning students to workshop groups based on their preferences, classroom constraints, and group capacity limits.
+**Sort students into workshop groups in seconds — respecting their preferences, your capacity limits, and a fair classroom mix.**
 
-http://smarter-groups.com
+**Live app:** [smarter-groups.com](http://smarter-groups.com)
 
-## Overview
+Assigning a few hundred students to workshop groups by hand is slow and thankless: everyone has preferences, every group has a minimum and a maximum, and you don't want all of room 3B landing in the same activity. Smarter Groups does the tedious first pass for you — it produces a solid, constraint-aware assignment that you can then fine-tune by dragging students around. It's built for teachers and workshop organizers, not data scientists.
 
-Smarter Groups helps educators and workshop organizers automatically assign students to groups while respecting:
-- **Student preferences** - Students can rank their preferred groups
-- **Group capacity** - Minimum and maximum participant limits per group
-- **Classroom distribution** - Optional limits on students from the same classroom in a group
-- **Priority levels** - Groups can be prioritized to fill important workshops first
+![Smarter Groups in action](docs/images/algorithm_results.png)
+
+---
+
+## How it works
+
+Five steps, start to finish:
+
+1. **Set up a workshop** — add groups (each with a min/max size and a priority), your classrooms, and your students.
+2. **Or import in bulk** — drop in a single CSV of students and their group preferences instead of typing them in.
+3. **Run the algorithm** — one click produces a balanced draft assignment that honors preferences and capacity.
+4. **Refine by hand** — drag and drop any student between groups; the app flags groups that fall below their minimum.
+5. **Export** — download the final assignment as CSV or Excel.
 
 ## Features
 
-- **Workshop Management** - Create and manage multiple workshops with their own groups, classrooms, and students
-- **CSV Import** - Bulk import students, classrooms, and preferences from CSV files
-- **Smart Assignment Algorithm** - Priority-based greedy algorithm with dynamic adjustment
-- **Manual Override** - Drag-and-drop interface to manually adjust assignments
-- **Export** - Download assignments as CSV or Excel files
-- **Multi-user** - Each user manages their own workshops
+| Feature | What it does |
+|---|---|
+| **Workshop management** | Run multiple workshops, each with its own groups, classrooms, and students |
+| **Smart assignment** | Priority-based algorithm that fills important groups first and balances the rest ([how it works](docs/algorithm.md)) |
+| **Capacity & balance rules** | Per-group min/max sizes, plus an optional cap on students from the same classroom |
+| **CSV import** | Bulk-load students, classrooms, and preferences from one file |
+| **Manual override** | Drag-and-drop to adjust any assignment after a run |
+| **Export** | Download results as CSV or Excel |
+| **Multi-user** | Every account manages its own private workshops |
 
-## Tech Stack
+## The assignment algorithm
 
-- **Backend**: PHP 8.4, Laravel 11
-- **Database**: MySQL
-- **Frontend**: Blade templates, Tailwind CSS 3, Alpine.js
-- **Testing**: Pest PHP
-- **Authentication**: Laravel Breeze
+The core of the app is a priority-based greedy algorithm tuned to produce a "good enough" starting point a teacher can refine — not a perfect global optimum:
 
-## Requirements
+1. **Groups are sorted by priority** (lower number = filled first).
+2. **More constrained students go first** — those with fewer viable options are placed before students with lots of choices.
+3. **Each student takes their highest available preference**, checked against capacity and classroom-mix limits.
+4. **Priority adapts as groups fill** — once a group reaches its minimum, it steps aside so under-filled groups can catch up, while more popular groups still keep an edge.
 
-- PHP 8.4+
-- Composer
-- Node.js & npm
-- MySQL
+The result fills under-resourced groups first, then tops up the popular ones. Full walkthrough and edge cases: **[docs/algorithm.md](docs/algorithm.md)**.
 
-## Installation
+## Quick start
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd smarter-groups
-   ```
+> Requires **PHP 8.4+**, **Composer**, **Node.js & npm**, and **MySQL**.
 
-2. Install PHP dependencies:
-   ```bash
-   composer install
-   ```
-
-3. Install JavaScript dependencies:
-   ```bash
-   npm install
-   ```
-
-4. Copy the environment file and configure your database:
-   ```bash
-   cp .env.example .env
-   ```
-
-5. Generate application key:
-   ```bash
-   php artisan key:generate
-   ```
-
-6. Configure your database connection in `.env`:
-   ```
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=smarter_groups
-   DB_USERNAME=your_username
-   DB_PASSWORD=your_password
-   ```
-
-7. Run migrations (add `--seed` to create a demo user and sample workshops):
-   ```bash
-   php artisan migrate --seed
-   ```
-
-   The seeder creates a demo account — email `testUser@example.com`, password `test123` — with two pre-populated workshops.
-
-8. Build frontend assets:
-   ```bash
-   npm run build
-   ```
-
-9. Start the development server:
-   ```bash
-   php artisan serve
-   ```
-
-## Development
-
-Run the application and Vite dev server in separate terminals:
 ```bash
-php artisan serve
-npm run dev
+git clone <repository-url> && cd smarter-groups
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
 ```
 
-The app is served at `http://localhost:8000`.
+Point `.env` at your database:
 
-### Code Style
-
-Format code using Laravel Pint:
-```bash
-vendor/bin/pint
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=smarter_groups
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 ```
 
-### Testing
+Then migrate, seed demo data, and build the frontend:
 
-Run the test suite:
 ```bash
-php artisan config:clear && php artisan test
+php artisan migrate --seed
+npm run build
 ```
 
-Run specific tests:
-```bash
-php artisan test --filter=WorkshopTest
-```
+Start the dev server with `php artisan serve` (run `npm run dev` in a second terminal for hot reloading) and open **http://localhost:8000**.
 
-## Usage
+The `--seed` flag creates a demo account and two pre-populated workshops to explore:
 
-### Creating a Workshop
+| Email | Password |
+|---|---|
+| `testUser@example.com` | `test123` |
 
-1. Register/login to your account
-2. Click "Create Workshop" on the dashboard
-3. Add groups with capacity limits and priority levels
-4. Add classrooms
-5. Add students with their classroom assignment and group preferences
+## Using the CSV import
 
-### CSV Import Format
-
-Import students using a semicolon-separated CSV file:
+Import students with a **semicolon-separated** CSV. Put a `1` in a group's column to mark it as one of that student's preferences:
 
 ```
 Classroom;Student Name;Group A;Group B;Group C
@@ -141,27 +92,46 @@ Class 1;Jane Smith;;1;
 Class 2;Bob Wilson;1;1;
 ```
 
-- First row: Headers with group names starting from column 3
-- Column 1: Classroom name
-- Column 2: Student name
-- Columns 3+: Put `1` to indicate preference for that group
+- **Column 1** — classroom name
+- **Column 2** — student name
+- **Columns 3+** — one column per group; a `1` means "this student prefers this group"
 
-### Running the Algorithm
+Groups and classrooms named in the file are created automatically on import.
 
-1. Ensure you have groups, classrooms, and students configured
-2. Click "Run Assignment Algorithm" on the workshop page
-3. Review the assignments in the Assignments tab
-4. Make manual adjustments if needed
-5. Export results to CSV or Excel
+## Tech stack
 
-## Algorithm
+| Layer | Tech |
+|---|---|
+| Backend | PHP 8.4, Laravel 11 |
+| Frontend | Blade, Tailwind CSS 3, Alpine.js (built with Vite) |
+| Database | MySQL |
+| Auth | Laravel Breeze |
+| Testing | Pest |
+| Exports | maatwebsite/excel |
+| Deployment | Docker, hosted via Coolify on a VPS |
 
-The assignment algorithm uses a priority-based greedy approach:
+## Documentation
 
-1. **Sort groups** by priority level (lower number = higher priority)
-2. **Reorder student preferences** based on group priority order
-3. **Sort students** by preference urgency (students with fewer options processed first)
-4. **Assign students** to their highest-preference available group
-5. **Dynamic adjustment** - When a group reaches minimum capacity, its priority is lowered to allow other groups to fill
+Deeper docs live in [`docs/`](docs/):
 
-This approach balances filling high-priority groups first while ensuring all groups meet minimum capacity requirements.
+- **[algorithm.md](docs/algorithm.md)** — how assignment works, phase by phase
+- **[architecture.md](docs/architecture.md)** — code structure and data model
+- **[deployment.md](docs/deployment.md)** — how the live site is built and hosted
+- **[style_guide.md](docs/style_guide.md)** — UI and code conventions
+
+## Development
+
+```bash
+# Reset the database and reload demo data
+php artisan migrate:fresh --seed
+
+# Format code
+vendor/bin/pint
+
+# Run the test suite (clear config first so test env applies)
+php artisan config:clear && php artisan test
+
+# Run a focused group or test
+php artisan test --group=algorithm
+php artisan test --filter="simple perfect fit"
+```
