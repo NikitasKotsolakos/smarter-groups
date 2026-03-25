@@ -24,7 +24,7 @@ Smarter Groups helps educators and workshop organizers automatically assign stud
 ## Tech Stack
 
 - **Backend**: PHP 8.4, Laravel 11
-- **Database**: PostgreSQL
+- **Database**: MySQL
 - **Frontend**: Blade templates, Tailwind CSS 3, Alpine.js
 - **Testing**: Pest PHP
 - **Authentication**: Laravel Breeze
@@ -34,7 +34,7 @@ Smarter Groups helps educators and workshop organizers automatically assign stud
 - PHP 8.4+
 - Composer
 - Node.js & npm
-- PostgreSQL
+- MySQL
 
 ## Installation
 
@@ -66,18 +66,20 @@ Smarter Groups helps educators and workshop organizers automatically assign stud
 
 6. Configure your database connection in `.env`:
    ```
-   DB_CONNECTION=pgsql
+   DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
-   DB_PORT=5432
+   DB_PORT=3306
    DB_DATABASE=smarter_groups
    DB_USERNAME=your_username
    DB_PASSWORD=your_password
    ```
 
-7. Run migrations:
+7. Run migrations (add `--seed` to create a demo user and sample workshops):
    ```bash
-   php artisan migrate
+   php artisan migrate --seed
    ```
+
+   The seeder creates a demo account — email `testUser@example.com`, password `test123` — with two pre-populated workshops.
 
 8. Build frontend assets:
    ```bash
@@ -91,16 +93,13 @@ Smarter Groups helps educators and workshop organizers automatically assign stud
 
 ## Development
 
-Run the development server with hot reloading:
-```bash
-composer run dev
-```
-
-Or run services separately:
+Run the application and Vite dev server in separate terminals:
 ```bash
 php artisan serve
 npm run dev
 ```
+
+The app is served at `http://localhost:8000`.
 
 ### Code Style
 
