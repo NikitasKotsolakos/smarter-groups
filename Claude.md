@@ -64,9 +64,9 @@ php artisan test
 - See `tests/Feature/Assignment/Fixtures/README.md` for detailed test case documentation
 
 ### Demo Credentials
-**Default Admin User** (created by seeder):
-- Email: `admin@admin.com`
-- Password: `admin123`
+**Default Demo User** (created by seeder):
+- Email: `testUser@example.com`
+- Password: `test123`
 
 **Sample Data** (created by seeder):
 - 2 workshops with groups, classrooms, students, and preferences pre-populated for testing

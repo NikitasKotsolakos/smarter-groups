@@ -20,16 +20,16 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $admin = User::factory()->create([
-            'name' => 'admin',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('admin123'),
+        $testUser = User::factory()->create([
+            'name' => 'testUser',
+            'email' => 'testUser@example.com',
+            'password' => bcrypt('test123'),
         ]);
 
         // Create first workshop
         $workshop1 = Workshop::create([
             'name' => 'Spring Project Workshop',
-            'user_id' => $admin->id,
+            'user_id' => $testUser->id,
         ]);
 
         $robotics = Group::create(['workshop_id' => $workshop1->id, 'name' => 'Robotics', 'minimumParticipants' => 8, 'maximumParticipants' => 15, 'priorityGroup' => 1]);
@@ -90,12 +90,12 @@ class DatabaseSeeder extends Seeder
         }
 
         // Seed assignments for workshop 1 (as if algorithm had run)
-        $this->seedWorkshop1Assignments($workshop1, $admin, [$robotics, $artDesign, $music, $coding]);
+        $this->seedWorkshop1Assignments($workshop1, $testUser, [$robotics, $artDesign, $music, $coding]);
 
         // Create second workshop
         $workshop2 = Workshop::create([
             'name' => 'Summer Activities 2026',
-            'user_id' => $admin->id,
+            'user_id' => $testUser->id,
         ]);
 
         $sports = Group::create(['workshop_id' => $workshop2->id, 'name' => 'Sports & Athletics', 'minimumParticipants' => 12, 'maximumParticipants' => 20, 'priorityGroup' => 2]);
@@ -161,7 +161,7 @@ class DatabaseSeeder extends Seeder
      * Seed assignments for workshop 1 (simulate algorithm results).
      * Distributes 45 students across 4 groups in a balanced way.
      */
-    private function seedWorkshop1Assignments(Workshop $workshop, User $admin, array $groups): void
+    private function seedWorkshop1Assignments(Workshop $workshop, User $testUser, array $groups): void
     {
         [$robotics, $artDesign, $music, $coding] = $groups;
 
@@ -179,7 +179,7 @@ class DatabaseSeeder extends Seeder
             $group->students()->attach($student->id, [
                 'assignment_method' => 'algorithm',
                 'assigned_at' => now(),
-                'assigned_by' => $admin->id,
+                'assigned_by' => $testUser->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
