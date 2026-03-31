@@ -9,6 +9,7 @@
 .env.backup
 .env.production
 .env.local
+.env.production.coolify
 .env.qa
 .phpactor.json
 .phpunit.result.cache
