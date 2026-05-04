@@ -1,23 +1,21 @@
 <?php
 
+use App\Models\Classroom;
+use App\Models\Group;
+use App\Models\GroupPreferences;
+use App\Models\Student;
 use App\Models\User;
 use App\Models\Workshop;
-use App\Models\Group;
-use App\Models\Classroom;
-use App\Models\Student;
-use App\Models\GroupPreferences;
 use App\Services\AssignmentAlgorithm\AssignmentService;
 use App\Services\AssignmentAlgorithm\DTOs\AssignmentResult;
-use Illuminate\Support\Facades\DB;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 /**
  * Helper function to import a CSV fixture and run the algorithm
  *
- * @param string $fixtureName Name of the CSV file (without extension)
- * @param array $groupOverrides Optional overrides for group settings ['groupName' => ['field' => value]]
- * @return AssignmentResult
+ * @param  string  $fixtureName  Name of the CSV file (without extension)
+ * @param  array  $groupOverrides  Optional overrides for group settings ['groupName' => ['field' => value]]
  */
 function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): AssignmentResult
 {
@@ -32,11 +30,11 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
     // Load and parse CSV
     $csvPath = base_path("tests/Feature/Assignment/Fixtures/{$fixtureName}.csv");
 
-    if (!file_exists($csvPath)) {
+    if (! file_exists($csvPath)) {
         throw new \RuntimeException("Fixture not found: {$csvPath}");
     }
 
-    $csvData = array_map(function($line) {
+    $csvData = array_map(function ($line) {
         return str_getcsv($line, ';');
     }, file($csvPath));
 
@@ -45,13 +43,13 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
 
     // Group names start from column 2
     $groupNames = array_slice($headers, 2);
-    $groupNames = array_filter($groupNames, fn($name) => !empty(trim($name)));
+    $groupNames = array_filter($groupNames, fn ($name) => ! empty(trim($name)));
 
     // Create groups with default values
     $groups = [];
     foreach ($groupNames as $index => $groupName) {
         $groupName = trim($groupName);
-        if (!empty($groupName)) {
+        if (! empty($groupName)) {
             $groups[$index + 2] = Group::create([
                 'workshop_id' => $workshop->id,
                 'name' => $groupName,
@@ -75,7 +73,9 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
 
     // Process each student row
     foreach ($csvData as $row) {
-        if (count($row) < 2) continue;
+        if (count($row) < 2) {
+            continue;
+        }
 
         $classroomName = trim($row[0] ?? '');
         $studentName = trim($row[1] ?? '');
@@ -85,7 +85,7 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
         }
 
         // Create or get classroom
-        if (!isset($classrooms[$classroomName])) {
+        if (! isset($classrooms[$classroomName])) {
             $classrooms[$classroomName] = Classroom::create([
                 'workshop_id' => $workshop->id,
                 'name' => $classroomName,
@@ -112,7 +112,8 @@ function runAlgorithmFixture(string $fixtureName, array $groupOverrides = []): A
     }
 
     // Run the algorithm
-    $service = new AssignmentService();
+    $service = new AssignmentService;
+
     return $service->assignStudentsToGroups($workshop);
 }
 
@@ -124,7 +125,7 @@ function dumpAssignmentSummary(AssignmentResult $result): void
     echo "\n=== Assignment Summary ===\n";
     echo "Assigned: {$result->getAssignedCount()}\n";
     echo "Unassigned: {$result->getUnassignedCount()}\n";
-    echo "Warnings: " . count($result->warnings) . "\n\n";
+    echo 'Warnings: '.count($result->warnings)."\n\n";
 
     echo "Groups:\n";
     foreach ($result->groups as $group) {
@@ -142,6 +143,35 @@ function dumpAssignmentSummary(AssignmentResult $result): void
 }
 
 // Group all algorithm tests together
+// Group all algorithm tests together
+test('00: simple-test', function () {
+    // Adjust minimums to match student count (15 students / 3 groups = 5 each)
+    $result = runAlgorithmFixture('00-simple-test', [
+        'Group A' => ['minimumParticipants' => 1, 'maximumParticipants' => 3],
+        'Group B' => ['minimumParticipants' => 1, 'maximumParticipants' => 3],
+        'Group C' => ['minimumParticipants' => 1, 'maximumParticipants' => 3],
+    ]);
+
+    // All students should be assigned
+    expect($result->getUnassignedCount())->toBe(0)
+        ->and($result->getAssignedCount())->toBe(3);
+
+    // No errors (unassigned students)
+    $errors = array_filter($result->warnings, fn ($w) => $w['severity'] === 'error');
+    expect(count($errors))->toBe(0);
+
+    // All groups should respect capacity constraints
+    foreach ($result->groups as $group) {
+        $count = $group->assignedStudents->count();
+        expect($count)->toBeLessThanOrEqual($group->maximumParticipants);
+        expect($count)->toBeGreaterThanOrEqual($group->minimumParticipants);
+    }
+
+    // Total students should be distributed across all groups
+    $totalAssigned = $result->groups->sum(fn ($g) => $g->assignedStudents->count());
+    expect($totalAssigned)->toBe(3);
+})->group('algorithm');
+
 test('01: simple perfect fit - all students assigned', function () {
     // Adjust minimums to match student count (15 students / 3 groups = 5 each)
     $result = runAlgorithmFixture('01-simple-perfect-fit', [
@@ -155,7 +185,7 @@ test('01: simple perfect fit - all students assigned', function () {
         ->and($result->getAssignedCount())->toBe(15);
 
     // No errors (unassigned students)
-    $errors = array_filter($result->warnings, fn($w) => $w['severity'] === 'error');
+    $errors = array_filter($result->warnings, fn ($w) => $w['severity'] === 'error');
     expect(count($errors))->toBe(0);
 
     // All groups should respect capacity constraints
@@ -165,7 +195,7 @@ test('01: simple perfect fit - all students assigned', function () {
     }
 
     // Total students should be distributed across all groups
-    $totalAssigned = $result->groups->sum(fn($g) => $g->assignedStudents->count());
+    $totalAssigned = $result->groups->sum(fn ($g) => $g->assignedStudents->count());
     expect($totalAssigned)->toBe(15);
 })->group('algorithm');
 
@@ -210,7 +240,7 @@ test('03: preference satisfaction - students get preferred choices', function ()
         ->and($result->getAssignedCount())->toBe(20);
 
     // No error warnings (unassigned students)
-    $errors = array_filter($result->warnings, fn($w) => $w['severity'] === 'error');
+    $errors = array_filter($result->warnings, fn ($w) => $w['severity'] === 'error');
     expect(count($errors))->toBe(0);
 
     // Each student should be in one of their preferred groups
@@ -236,7 +266,7 @@ test('04: capacity constraints - respects maximum capacity', function () {
         ->and($result->getAssignedCount())->toBe(15);
 
     // Should have error warnings for unassigned students
-    $errors = array_filter($result->warnings, fn($w) => $w['severity'] === 'error');
+    $errors = array_filter($result->warnings, fn ($w) => $w['severity'] === 'error');
     expect(count($errors))->toBe(5);
 
     // NO group should exceed maximum capacity
