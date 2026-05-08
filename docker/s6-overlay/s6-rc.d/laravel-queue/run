@@ -1,0 +1,4 @@
+#!/command/with-contenv sh
+
+cd /var/www/html
+exec s6-setuidgid www-data php artisan queue:work --tries=3 --max-time=3600 --sleep=3

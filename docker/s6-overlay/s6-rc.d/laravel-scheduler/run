@@ -1,0 +1,4 @@
+#!/command/with-contenv sh
+
+cd /var/www/html
+exec s6-setuidgid www-data php artisan schedule:work
