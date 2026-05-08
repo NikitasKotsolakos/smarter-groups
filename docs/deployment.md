@@ -46,7 +46,7 @@ If you add Redis, S3, or a real mailer later, swap the corresponding driver + va
 1. Push to `main`.
 2. GitHub webhook hits Coolify → Coolify clones the repo, runs Nixpacks build (composer install, npm ci, npm run build, artisan caches).
 3. `start.sh` (in `nixpacks.toml`'s `[staticAssets]`) renders the nginx template and starts `supervisord -n`.
-4. Migrations: run via Coolify's "post-deploy" hook or manually through the container shell (`php artisan migrate --force`).
+4. Migrations: run via Coolify's "post-deploy" hook. Site is put in maintenance, then brought back up after migrations have run: (`php artisan down --render="maintenance" --refresh=15 --retry=20 --secret="maintenanceTest" && php artisan migrate --force && php artisan up`). Navigate to URL/maintenanceTest while the site is down to test.
 
 ## Operating notes
 

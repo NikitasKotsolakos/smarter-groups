@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Preference Based Group Generator</title>
+        <title>Smarter Groups</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -23,7 +23,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </div>
-                        <span class="text-xl font-bold text-gray-900 dark:text-white">Group Generator</span>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">Smarter Groups</span>
                     </div>
 
                     @if (Route::has('login'))
@@ -55,7 +55,7 @@
                         <h1 class="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
                             Preference Based<br/>
                             <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                Group Generator
+                                Smarter Groups
                             </span>
                         </h1>
                         <p class="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
@@ -149,7 +149,7 @@
 
             <!-- Footer -->
             <footer class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                <p>&copy; {{ date('Y') }} Preference Based Group Generator. Built with Laravel {{ Illuminate\Foundation\Application::VERSION }}</p>
+                <p>&copy; {{ date('Y') }} Smarter Groups. Built with Laravel {{ Illuminate\Foundation\Application::VERSION }}</p>
             </footer>
         </div>
     </body>
